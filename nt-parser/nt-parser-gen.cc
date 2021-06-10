@@ -1058,20 +1058,31 @@ vector<double> log_prob_parser_particle(ComputationGraph* hg,
             }
             //resample the particles based on the updated weights
             vector<ParserState*> resampled;
-            //get the total for re-normalization and for computing surprisal
-            float total = 0;
-            for (unsigned i = 0; i < num_particles; i++){total += exp(particles[i]->log_prob_additional_parse);}
+            //get the total for re-normalization and for computing surprisal, using the log-sum-exp trick to avoid underflow
+            float c = 0;
+            //first, find the max log probability
+            for (unsigned i = 0; i < num_particles; i++){
+                if (particles[i]->log_prob_additional_parse > c){
+                    c = particles[i]->log_prob_additional_parse;
+                }
+            }
+            //add up e^(x-c) across all x, as per the log-sum-exp rule
+            float log_sum = 0;
+            for (unsigned i  = 0; i < num_particles; i++){
+                log_sum += exp(particles[i]->log_prob_additional_parse - c);
+            }
+            log_sum = log(log_sum) + c;
             //sample for each particle by generating a random number between 0 and 1
             for (unsigned p = 0; p < num_particles; p++){
                 float partial_total = 0;
                 float random = rand01();
                 for (unsigned i = 0; i < num_particles; i++){
-                    partial_total += exp(particles[i]->log_prob_additional_parse)/total;
+                    partial_total += exp(particles[i]->log_prob_additional_parse - log_sum);
                     if (random <= partial_total){ resampled.push_back(particles[i]); break;}
                 }
             }
-            //surprisal = log(N/sum(P(w|C)))
-            surprisals.push_back(log(num_particles/total));
+            //surprisal = log(N/sum(P(w|C))) = log(N) - log(sum(P(w|C)))
+            surprisals.push_back(log(num_particles) - (log_sum));
             assert(particles.size() == resampled.size());
             //update the particles based on the values we have just resampled
             particles.clear();

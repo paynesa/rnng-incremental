@@ -534,7 +534,6 @@ struct ParserStateAction {
       assert(p_state->stack.size() > 2); // dummy symbol means > 2 (not >= 2)
       assert(p_state->stack_content.size() > 2 && p_state->stack.size() == p_state->stack_content.size());
       // find what paren we are closing
-      cerr << p_state->is_open_paren.size() << endl;
       int i = p_state->is_open_paren.size() - 1; //get the last thing on the stack
       while(p_state->is_open_paren[i] < 0) { --i; assert(i >= 0); } //iteratively decide whether or not it's a non-terminal
       Expression nonterminal = lookup(*hg, p_ntup, p_state->is_open_paren[i]);
@@ -989,6 +988,7 @@ vector<double> log_prob_parser_particle(ComputationGraph* hg,
 
         //store the surprisals to return at the end
         vector<double> surprisals;
+        std::default_random_engine generator;
 
         //iterate through the sentence
         for (unsigned w_index = 0; w_index < sent.size(); ++w_index) {
@@ -1019,14 +1019,15 @@ vector<double> log_prob_parser_particle(ComputationGraph* hg,
                     Expression r_t = affine_transform({abias, p2a, nlp_t});
                     Expression adiste = log_softmax(r_t, current_valid_actions);
 
-                    //select an action to pursue by sampling from the distribution of actions using random number generation
-                    float random = rand01();
-                    float total = 0;
-                    int action = -1;
+                    //select an action to pursue by first creating a representative distribution
+                    vector<float> dvect;
                     for (unsigned i = 0; i < current_valid_actions.size(); i++){
-                        total += exp(as_scalar(pick(adiste, current_valid_actions[i]).value()));
-                        if (random <= total){ action = current_valid_actions[i]; break;}
+                        dvect.push_back(exp(as_scalar(pick(adiste, current_valid_actions[i]).value())));
                     }
+                    //create a distribution and sample the action from it
+                    std::discrete_distribution<> distribution(dvect.begin(), dvect.end());
+                    int action = current_valid_actions[distribution(generator)];
+
                     // set the character to correspond to the action
                     a_char = adict.convert(action)[0];
                     double new_score = 0;
@@ -1066,20 +1067,21 @@ vector<double> log_prob_parser_particle(ComputationGraph* hg,
                     c = particles[i]->log_prob_additional_parse;
                 }
             }
-            //add up e^(x-c) across all x, as per the log-sum-exp rule
+            //add up e^(x-c) across all x
             float log_sum = 0;
             for (unsigned i  = 0; i < num_particles; i++){
                 log_sum += exp(particles[i]->log_prob_additional_parse - c);
             }
             log_sum = log(log_sum) + c;
-            //sample for each particle by generating a random number between 0 and 1
+            //get the vector of re-normalized resampling probabilities, and create a distribution from which to sample
+            vector<float> resample_vect;
+            for (unsigned i = 0; i < num_particles; i++){
+                resample_vect.push_back(exp(particles[i]->log_prob_additional_parse - log_sum));
+            }
+            std::discrete_distribution<> resample_distribution(resample_vect.begin(), resample_vect.end());
+            //sample from the distribution iteratively to get a set of new particles 
             for (unsigned p = 0; p < num_particles; p++){
-                float partial_total = 0;
-                float random = rand01();
-                for (unsigned i = 0; i < num_particles; i++){
-                    partial_total += exp(particles[i]->log_prob_additional_parse - log_sum);
-                    if (random <= partial_total){ resampled.push_back(particles[i]); break;}
-                }
+                resampled.push_back(particles[resample_distribution(generator)]);
             }
             //surprisal = log(N/sum(P(w|C))) = log(N) - log(sum(P(w|C)))
             surprisals.push_back(log(num_particles) - (log_sum));

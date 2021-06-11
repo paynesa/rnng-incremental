@@ -1037,7 +1037,9 @@ vector<double> log_prob_parser_particle(ComputationGraph* hg,
                     //apply the action and update the particle so we can proceed until we reach a shift
                     ParserStateAction* p_state_action = new ParserStateAction(particles[y], action, a_char, wordid, new_score, 0);
                     ParserState* newstate = p_state_action->applyAction(hg, cbias, cW, p_a, p_w, p_nt, p_ntup, apply_dropout);
+                    delete particles[y];
                     particles[y] = newstate;
+                    delete p_state_action;
                     assert(particles[y]->log_prob_additional_parse == new_score);
                 }
                 // print out the partial parses
@@ -1081,16 +1083,39 @@ vector<double> log_prob_parser_particle(ComputationGraph* hg,
             std::discrete_distribution<> resample_distribution(resample_vect.begin(), resample_vect.end());
             //sample from the distribution iteratively to get a set of new particles 
             for (unsigned p = 0; p < num_particles; p++){
-                resampled.push_back(particles[resample_distribution(generator)]);
+                ParserState* re = particles[resample_distribution(generator)];
+                ParserState* currstate = new ParserState();
+                currstate->stack_lstm = re->stack_lstm;
+                currstate->term_lstm = re->term_lstm;
+                currstate->action_lstm = re->action_lstm;
+                currstate->const_lstm_fwd = re->const_lstm_fwd;
+                currstate->const_lstm_rev = re->const_lstm_rev;
+                currstate->terms = re->terms;
+                currstate->is_open_paren = re->is_open_paren;
+                currstate->nt_count = re->nt_count;
+                currstate->stack = re->stack;
+                currstate->stack_content = re->stack_content;
+                currstate->results = re->results;
+                currstate->score = re->score;
+                currstate->nopen_parens = re->nopen_parens;
+                currstate->prev_a = re->prev_a;
+                currstate->fringe_index = re->fringe_index;
+                currstate->log_posterior_parse = re->log_posterior_parse;
+                currstate->log_prob_additional_parse = re->log_prob_additional_parse;
+                resampled.push_back(currstate);
             }
+            assert(particles.size() == resampled.size());
             //surprisal = log(N/sum(P(w|C))) = log(N) - log(sum(P(w|C)))
             surprisals.push_back(log(num_particles) - (log_sum));
-            assert(particles.size() == resampled.size());
             //update the particles based on the values we have just resampled
+            for (unsigned i = 0; i < particles.size(); i++){delete particles[i];}
             particles.clear();
             for (ParserState* re : resampled){particles.push_back(re);}
             resampled.clear();
         }
+        //free memory from the remaining particles and return the surprisals
+        for (unsigned i = 0; i < particles.size(); i++){delete particles[i];}
+        particles.clear();
         return surprisals;
     }
 };
@@ -1391,11 +1416,11 @@ int main(int argc, char** argv) {
       f.open(f_name);
       // output header
       f << "sentence_id\ttoken_id\ttoken\tsurprisal\n";
-
+      ComputationGraph hg;
       //iterate through the sentences
       for (unsigned sii = 0; sii < eval_size; ++sii) {
         const auto& sentence=eval_corpus.sents[sii];
-        ComputationGraph hg;
+
         vector<double> surprisals;
         bool run_beam = conf["beam"].as<bool>();
         if (run_beam){
@@ -1411,9 +1436,11 @@ int main(int argc, char** argv) {
             f << (sii + 1) << "\t" << (k + 1) << "\t" << termdict.convert(sentence.raw[k]) << "\t" << surprisals[k] <<"\n";
         }
         f.flush();
+        hg.clear();
       }
       //close the file, and log the time taken to complete
       f.close();
+      delete cfsm;
       cerr << "Results written to: " << f_name << "...\n";
       auto t_end = std::chrono::high_resolution_clock::now();
       cerr << "TEST: " << eval_corpus.size()  << " sents in " << std::chrono::duration<double, std::milli>(t_end-t_start).count() << " ms]" << endl;

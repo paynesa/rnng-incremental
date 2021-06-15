@@ -44,3 +44,20 @@ ax.bar(x+0.25, surprisal_means_with_commas, width=0.25, label="Comma", yerr=surp
 plt.legend()
 plt.show()
 
+non_blocking = surprisal_means_with_commas[:3] + surprisal_means_without_commas[:3]
+blocking = surprisal_means_with_commas[3:] + surprisal_means_without_commas[3:]
+non_blocking_stds = surprisal_stds_with_commas[:3] + surprisal_stds_without_commas[:3]
+blocking_stds = surprisal_stds_with_commas[3:] + surprisal_stds_without_commas[3:]
+fig, ax = plt.subplots()
+plt.ylabel("Mean surprisal")
+plt.xlabel("Condition")
+plt.title("Digging in Surprisals with Particle Filter, k=100")
+x = np.arange(6)
+CONDITIONS = ["", "short_comma", "long_comma", "very_long_comma", "short_no_comma", "long_no_comma", "very_long_no_comma"]
+ax.set_xticklabels(CONDITIONS)
+ax.bar(x, non_blocking, width=0.25, label="Non-Blocking", yerr=non_blocking_stds)
+ax.bar(x+0.25, blocking, width=0.25, label="Blocking", yerr=blocking_stds)
+plt.legend()
+plt.show()
+
+

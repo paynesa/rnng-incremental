@@ -6,7 +6,9 @@ import matplotlib.pyplot as plt
 
 meta_data = []
 REGION_NUMBER = 6
-PARTICLE_NUMBERS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 15, 20, 30, 40]
+PARTICLE_NUMBERS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 15, 20, 30, 40, 50, 60, 70, 80, 90, 100, 125, 150, 175, 200]
+PARTICLE_NUMBERS = [1, 5, 10, 15, 20, 30, 40, 50, 60, 70, 80, 90, 100, 125, 150, 175, 200]
+PARTICLE_NUMBERS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 15]
 REGION_DATA = {
         1 : "Start",
         2 : "Noun",
@@ -79,6 +81,10 @@ ax.errorbar(PARTICLE_NUMBERS, reduced_ambig_mean, yerr=reduced_ambig_std, label=
 ax.errorbar(PARTICLE_NUMBERS, reduced_unambig_mean, yerr=reduced_unambig_std, label="reduced_unambig")
 plt.legend()
 plt.show()
+print(unreduced_ambig_mean)
+print(reduced_ambig_mean)
+print(unreduced_unambig_mean)
+print(reduced_unambig_mean)
 
 
 

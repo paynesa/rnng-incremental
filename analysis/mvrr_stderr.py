@@ -14,10 +14,10 @@ REGION_DATA = {
     }
 
 # a list of the values of k used
-PARTICLE_NUMBERS = [1, 2, 3, 4, 5, 6]
+PARTICLE_NUMBERS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
 
 # the region we're currently considering
-REGION_NUMBER = 5
+REGION_NUMBER = 6
 
 # load in the meta data about the sentences from the JSON files
 META_DATA = []
@@ -80,7 +80,7 @@ for num_particle in PARTICLE_NUMBERS:
 
 # graph the results
 fig, ax = plt.subplots()
-plt.title(f"Surprisals for MVRR at {REGION_DATA[REGION_NUMBER]}")
+plt.title(f"Particle Filter Surprisals for MVRR at {REGION_DATA[REGION_NUMBER]}")
 for key in MEAN_DICT:
     ax.errorbar(PARTICLE_NUMBERS, MEAN_DICT[key], yerr=STDERR_DICT[key], label=key)
 plt.ylabel("mean surprisal")

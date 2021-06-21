@@ -19,7 +19,7 @@ REGION_DATA = {
 
 # a list of the values of k used
 #PARTICLE_NUMBERS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 20, 30, 40]
-PARTICLE_NUMBERS = [1, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
+PARTICLE_NUMBERS = [1, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110]
 # the region we're currently considering
 REGION_NUMBER = 5
 

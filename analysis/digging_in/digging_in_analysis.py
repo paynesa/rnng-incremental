@@ -7,7 +7,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # keep track of the values of k we're considering
-PARTICLE_NUMBERS = [10]
+PARTICLE_NUMBERS = [10, 20, 30]
 
 #keep track of the means and stderrs for each value of k for each of the 3 cases
 SHORT_MEANS = []
@@ -22,7 +22,7 @@ for particle_number in PARTICLE_NUMBERS:
     DIFFERENCES = []
     # average over the 10 runs
     for i in range(10):
-        df = pd.read_csv(f"{particle_number}-dig-{i+1}.txt", sep="\t")
+        df = pd.read_csv(f"results_bllip/{particle_number}-dig-{i+1}.txt", sep="\t")
         sentence_surprisals = []
         for sentence_id in set(df["sentence_id"]):
             sentence_surprisals.append(np.asarray(df[df["sentence_id"] == sentence_id]["surprisal"])[-2])
@@ -45,7 +45,7 @@ plt.title(f"Particle Filter Surprisals for Digging In")
 ax.errorbar(PARTICLE_NUMBERS, SHORT_MEANS, yerr=SHORT_STDERRS, label="short")
 ax.errorbar(PARTICLE_NUMBERS, LONG_MEANS, yerr=LONG_STDERRS, label="long")
 ax.errorbar(PARTICLE_NUMBERS, VERY_LONG_MEANS, yerr=VERY_LONG_STDERRS, label="very_long")
-plt.ylabel("mean surprisals")
+plt.ylabel("mean differences in surprisal")
 plt.xlabel("number of particles")
 plt.legend()
 plt.show()

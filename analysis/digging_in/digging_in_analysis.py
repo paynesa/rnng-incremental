@@ -1,63 +1,62 @@
+"""Plots the differences in comma and no-comma surprisal across each of the three
+lengths of intervening material (short, long, very long) as a function of
+the number of particles"""
+
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 
-df = pd.read_csv("../surprisals_digging_in.txt", sep="\t")
+# keep track of the values of k we're considering
+PARTICLE_NUMBERS = [10]
 
-without_commas = df[df["sentence_id"] <= 186]
-with_commas = df[df["sentence_id"] > 186]
-CONDITIONS = ["", "no_blocker_short", "no_blocker_long", "no_blocker_very_long", "blocker_short", "blocker_long", "blocker_very_long"]
-surprisal_means_with_commas = []
-surprisal_means_without_commas = []
-surprisal_stds_with_commas = []
-surprisal_stds_without_commas = []
+#keep track of the means and stderrs for each value of k for each of the 3 cases
+SHORT_MEANS = []
+SHORT_STDERRS = []
+LONG_MEANS = []
+LONG_STDERRS = []
+VERY_LONG_MEANS = []
+VERY_LONG_STDERRS = []
 
-for i in range(6):
-    group_without_commas = without_commas[(without_commas["sentence_id"] <= 31*(i+1)) & (without_commas["sentence_id"] > 31*(i))]
-    group_with_commas = with_commas[(with_commas["sentence_id"] <= 186+(31*(i+1))) & (with_commas["sentence_id"] > 186+(31*i))]
-    surprisals_without_commas = []
-    surprisals_with_commas = []
-    for sentence_id in set(group_with_commas["sentence_id"]):
-        curr_sentence = group_with_commas[group_with_commas["sentence_id"] == sentence_id]
-        surprisals_with_commas.append(np.asarray(curr_sentence["surprisal"])[-2])
-    for sentence_id in set(group_without_commas["sentence_id"]):
-        curr_sentence = group_without_commas[group_without_commas["sentence_id"] == sentence_id]
-        surprisals_without_commas.append(np.asarray(curr_sentence["surprisal"])[-2])
-    surprisals_without_commas = np.asarray(surprisals_without_commas)
-    surprisals_with_commas = np.asarray(surprisals_with_commas)
+# calculate means and stderrs for each value of k
+for particle_number in PARTICLE_NUMBERS:
+    DIFFERENCES = []
+    # average over the 10 runs
+    for i in range(10):
+        df = pd.read_csv(f"{particle_number}-dig-{i+1}.txt", sep="\t")
+        sentence_surprisals = []
+        for sentence_id in set(df["sentence_id"]):
+            sentence_surprisals.append(np.asarray(df[df["sentence_id"] == sentence_id]["surprisal"])[-2])
+        no_commas = sentence_surprisals[:93]
+        commas = sentence_surprisals[93:]
+        DIFFERENCES.append([commas[i]-no_commas[i] for i in range(93)])
+    # take the means of the differences betweeen the comma and no comma condition across the 10
+    MEAN_DIFFERENCES = [np.mean(np.asarray([sen[i] for sen in DIFFERENCES])) for i in range(93)]
+    # break it up by the three conditions
+    SHORT_MEANS.append(np.mean(MEAN_DIFFERENCES[:31]))
+    SHORT_STDERRS.append(np.std(MEAN_DIFFERENCES[:31])/np.sqrt(31))
+    LONG_MEANS.append(np.mean(MEAN_DIFFERENCES[31:62]))
+    LONG_STDERRS.append(np.std(MEAN_DIFFERENCES[31:62])/np.sqrt(31))
+    VERY_LONG_MEANS.append(np.mean(MEAN_DIFFERENCES[62:]))
+    VERY_LONG_STDERRS.append(np.std(MEAN_DIFFERENCES[62:])/np.sqrt(31))
 
-    surprisal_means_without_commas.append(np.mean(surprisals_without_commas))
-    surprisal_stds_without_commas.append(np.std(surprisals_without_commas)/np.sqrt(31))
-    surprisal_means_with_commas.append(np.mean(surprisals_with_commas))
-    surprisal_stds_with_commas.append(np.std(surprisals_with_commas)/np.sqrt(31))
-
-# fig = plt.figure()
-# ax = fig.add_axes([0,0,1,1])
+# plot the results_bllip
 fig, ax = plt.subplots()
-plt.ylabel("Mean surprisal")
-plt.xlabel("Condition")
-plt.title("Digging in Surprisals with Particle Filter, k=100")
-x = np.arange(6)
-ax.set_xticklabels(CONDITIONS)
-ax.bar(x, surprisal_means_without_commas, width=0.25, label="No Comma", yerr=surprisal_stds_with_commas)
-ax.bar(x+0.25, surprisal_means_with_commas, width=0.25, label="Comma", yerr=surprisal_stds_without_commas)
+plt.title(f"Particle Filter Surprisals for Digging In")
+ax.errorbar(PARTICLE_NUMBERS, SHORT_MEANS, yerr=SHORT_STDERRS, label="short")
+ax.errorbar(PARTICLE_NUMBERS, LONG_MEANS, yerr=LONG_STDERRS, label="long")
+ax.errorbar(PARTICLE_NUMBERS, VERY_LONG_MEANS, yerr=VERY_LONG_STDERRS, label="very_long")
+plt.ylabel("mean surprisals")
+plt.xlabel("number of particles")
 plt.legend()
 plt.show()
 
-non_blocking = surprisal_means_with_commas[:3] + surprisal_means_without_commas[:3]
-blocking = surprisal_means_with_commas[3:] + surprisal_means_without_commas[3:]
-non_blocking_stds = surprisal_stds_with_commas[:3] + surprisal_stds_without_commas[:3]
-blocking_stds = surprisal_stds_with_commas[3:] + surprisal_stds_without_commas[3:]
-fig, ax = plt.subplots()
-plt.ylabel("Mean surprisal")
-plt.xlabel("Condition")
-plt.title("Digging in Surprisals with Particle Filter, k=100")
-x = np.arange(6)
-CONDITIONS = ["", "short_comma", "long_comma", "very_long_comma", "short_no_comma", "long_no_comma", "very_long_no_comma"]
-ax.set_xticklabels(CONDITIONS)
-ax.bar(x, non_blocking, width=0.25, label="Non-Blocking", yerr=non_blocking_stds)
-ax.bar(x+0.25, blocking, width=0.25, label="Blocking", yerr=blocking_stds)
-plt.legend()
-plt.show()
+
+
+
+
+
+
+
+
 
 

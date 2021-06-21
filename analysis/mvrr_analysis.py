@@ -42,7 +42,8 @@ for num_particles in PARTICLE_NUMBERS:
     unreduced_unambig = []
     for i in range(10):
         #print(f"processing mvrr_{num_particles}_{i+1}.txt...")
-        file = pd.read_csv(f"mvrr_{num_particles}_{i+1}.txt", sep="\t")
+        #file = pd.read_csv(f"mvrr_{num_particles}_{i+1}.txt", sep="\t")
+        file = pd.read_csv(f"beam_results/{num_particles}-mvrr-{i+1}.txt", sep="\t")
         for i in range(len(meta_data)):
             sentence = file[file["sentence_id"] == i+1]
             counter = 0

@@ -2,7 +2,8 @@
 
 We consider a subset of the data in `unkigied_digging_in_sentences.txt` including
 only the non-blocking sentences, following Futrell et al 2019. This data can be extracted
-with `digging_data.py` and is in `relevant_digging_in_sentences.txt.`
+with `digging_data.py` and is in `relevant_digging_in_sentences.txt.` All sentences from
+the Futrell et al data, without UNK-ification, are in `digging_in_sentences.txt`.
 
 The model is run 10 times on each value of `k` for the particles and results 
 are averaged across these values: results for the model trained on `bllip` are in 

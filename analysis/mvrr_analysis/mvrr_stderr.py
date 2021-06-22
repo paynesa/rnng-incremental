@@ -19,9 +19,9 @@ REGION_DATA = {
 
 # a list of the values of k used
 #PARTICLE_NUMBERS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 20, 30, 40]
-PARTICLE_NUMBERS = [1, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110]
+PARTICLE_NUMBERS = [1, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130]
 # the region we're currently considering
-REGION_NUMBER = 5
+REGION_NUMBER = 6
 
 # load in the meta data about the sentences from the JSON files
 META_DATA = []

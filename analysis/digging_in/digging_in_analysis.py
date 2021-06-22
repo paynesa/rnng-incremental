@@ -7,7 +7,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # keep track of the values of k we're considering
-PARTICLE_NUMBERS = [10, 20, 30]
+PARTICLE_NUMBERS = [10, 20, 30, 40, 50]
 
 #keep track of the means and stderrs for each value of k for each of the 3 cases
 SHORT_MEANS = []
@@ -28,7 +28,7 @@ for particle_number in PARTICLE_NUMBERS:
             sentence_surprisals.append(np.asarray(df[df["sentence_id"] == sentence_id]["surprisal"])[-2])
         no_commas = sentence_surprisals[:93]
         commas = sentence_surprisals[93:]
-        DIFFERENCES.append([commas[i]-no_commas[i] for i in range(93)])
+        DIFFERENCES.append([no_commas[i]-commas[i] for i in range(93)])
     # take the means of the differences betweeen the comma and no comma condition across the 10
     MEAN_DIFFERENCES = [np.mean(np.asarray([sen[i] for sen in DIFFERENCES])) for i in range(93)]
     # break it up by the three conditions

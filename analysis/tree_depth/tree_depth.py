@@ -23,7 +23,7 @@ for line in open("gold_parses_tree_depth.txt", "r"):
 TEST_DEPTH = []
 sent_num = -1
 sentences = {}
-for line in open("tree_depth_sentence_predictions.txt", "r"):
+for line in open("bllip_tree_depth.txt", "r"):
     line = line.split("\t")
     # we take this to be the border between two sets of particle parses and weights
     if len(line) < 2:

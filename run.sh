@@ -5,10 +5,15 @@
 
 # done
 
-for k in {1..10}
-do 
-	for x in {1..10}
-	do
-		echo $k-$x
-	done
+# for k in {1..10}
+# do 
+# 	for x in {1..10}
+# 	do
+# 		echo $k-$x
+# 	done
+# done
+
+for k in {3..10}
+do
+	echo $((10*$k))
 done

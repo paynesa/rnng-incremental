@@ -7,7 +7,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # keep track of the values of k we're considering
-PARTICLE_NUMBERS = [10, 20, 30, 40, 50]
+PARTICLE_NUMBERS = [1, 10, 20, 30, 40, 50, 60]
 
 #keep track of the means and stderrs for each value of k for each of the 3 cases
 SHORT_MEANS = []

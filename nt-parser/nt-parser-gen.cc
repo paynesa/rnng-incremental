@@ -992,14 +992,12 @@ vector<double> log_prob_parser_particle(ComputationGraph* hg,
 
         //iterate through the sentence
         for (unsigned w_index = 0; w_index < sent.size(); ++w_index) {
-            cout << termdict.convert(sent.raw[w_index]) << "\t";//<< " ,index " << w_index << endl;
+            //cerr << "Current word: " << termdict.convert(sent.raw[w_index]) << " ,index " << w_index << endl;
             //cerr << "List of partial parses: \n";
             for (unsigned y = 0; y < num_particles; y++) {
                 //repeatedly sample until we reach a shift operation
                 char a_char = '0';
-                int iters = 0;
                 while (a_char != 'S'){
-                    iters += 1;
                     //get the valid actions for the particle
                     vector<unsigned> current_valid_actions;
                     for (auto a: possible_actions) {
@@ -1024,25 +1022,14 @@ vector<double> log_prob_parser_particle(ComputationGraph* hg,
                     //select an action to pursue by first creating a representative distribution
                     vector<float> dvect;
                     for (unsigned i = 0; i < current_valid_actions.size(); i++){
-                        float prob = exp(as_scalar(pick(adiste, current_valid_actions[i]).value()));
-                        dvect.push_back(prob);
+                        dvect.push_back(exp(as_scalar(pick(adiste, current_valid_actions[i]).value())));
                     }
-
                     //create a distribution and sample the action from it
                     std::discrete_distribution<> distribution(dvect.begin(), dvect.end());
                     int action = current_valid_actions[distribution(generator)];
 
                     // set the character to correspond to the action
                     a_char = adict.convert(action)[0];
-                    //print it out if we've gotten to a shift action
-                    if (iters == 2){
-                        for (unsigned i = 0; i < current_valid_actions.size(); i++){
-                            float prob = exp(as_scalar(pick(adiste, current_valid_actions[i]).value()));
-                            cout << adict.convert(current_valid_actions[i])  << ": " << prob << "\t";
-                        }
-                        //cout << endl;
-                    }
-
                     double new_score = 0;
                     unsigned wordid = sent.raw[w_index];
                     //re-weight by P(w_t|y) if the operation is a shift
@@ -1056,24 +1043,23 @@ vector<double> log_prob_parser_particle(ComputationGraph* hg,
                     assert(particles[y]->log_prob_additional_parse == new_score);
                 }
                 // print out the partial parses
-                if (w_index == sent.size()-1) {
-                    cout << "ITERS: " << iters << endl;
-                    int shift_count = 0;
-                    for (auto action : particles[y]->results) {
-                        const string &a = adict.convert(action);
-                        if (a[0] == 'R') cout << ")";
-                        if (a[0] == 'N') {
-                            int nt = action2NTindex[action];
-                            cout << " (" << ntermdict.convert(nt);
-                        }
-                        if (a[0] == 'S') {
-                            cout << " " << termdict.convert(sent.raw[shift_count]);
-                            shift_count++;
-                        }
+                if(w_index == sent.size()-1){
+		int shift_count = 0;
+                for (auto action : particles[y]->results){
+                    const string& a = adict.convert(action);
+                    if (a[0] == 'R') cerr << ")";
+                    if (a[0] == 'N') {
+                        int nt = action2NTindex[action];
+                        cerr << " (" << ntermdict.convert(nt);
                     }
-                    cout << exp(particles[y]->log_prob_additional_parse) << " " << particles[y]->stack.size();
-                    cout << endl;
+                    if (a[0] == 'S'){
+                        cerr << " " << termdict.convert(sent.raw[shift_count]);
+                        shift_count++;
+                    }
                 }
+		cerr << "\t" << exp(particles[y]->log_prob_additional_parse);
+                //cerr << exp(particles[y]->log_prob_additional_parse) << " " << particles[y]->stack.size();
+                cerr << endl;}
             }
             //resample the particles based on the updated weights
             vector<ParserState*> resampled;
@@ -1444,7 +1430,7 @@ int main(int argc, char** argv) {
             surprisals  = parser.log_prob_parser_beam(&hg, sentence, &right, BEAM_SIZE, FASTTRACK_BEAM_SIZE, WORD_BEAM_SIZE, false);
         }
         else {
-            cout << "Running particle filtering with " << NUM_PARTICLES << " particles\n";
+            cerr << "Running particle filtering with " << NUM_PARTICLES << " particles\n";
             surprisals = parser.log_prob_parser_particle(&hg, sentence, &right, NUM_PARTICLES, false);
         }
         //write out the surprisals
@@ -1457,7 +1443,7 @@ int main(int argc, char** argv) {
       //close the file, and log the time taken to complete
       f.close();
       delete cfsm;
-      cout << "Results written to: " << f_name << "...\n";
+      cerr << "Results written to: " << f_name << "...\n";
       auto t_end = std::chrono::high_resolution_clock::now();
       cerr << "TEST: " << eval_corpus.size()  << " sents in " << std::chrono::duration<double, std::milli>(t_end-t_start).count() << " ms]" << endl;
   }

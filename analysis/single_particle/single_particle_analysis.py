@@ -15,33 +15,36 @@ REGION_DATA = {
         6 : "End"
     }
 
-OVERALL_DICT = {}
-
 # load in the meta data about the sentences from the JSON files
 META_DATA = []
-mvrr_json = json.load(open("mvrr_analysis/mvrr.json"))
+mvrr_json = json.load(open("../mvrr_analysis/mvrr.json"))
 for item in mvrr_json["items"]:
     for sub_item in item["conditions"]:
         META_DATA.append(sub_item)
 
+# dictionary to store information about the sentences
+OVERALL_DICT = {}
 sentence_number = 0
 for line in open("single_particle.txt", "r"):
     if line.strip() and line.split()[0] != "Running":
         line = line.strip().split()
         region_index = 0
+        # store information based on the current condition
         condition_name = META_DATA[sentence_number]["condition_name"]
         if condition_name not in OVERALL_DICT:
             OVERALL_DICT[condition_name] = {}
         regions = META_DATA[sentence_number]["regions"]
+        # a stack to store the current open NT, padded with an extra in the case of a prematurely closed NT
         curr_open_nt = ["NULL"]
-
         for word in line:
+            # open NT
             if "(" in word:
                 curr_open_nt.append(word)
-
             else:
-                subtract = ")" in word
+                # if we have closed an NT, then we need to pop the NT off the stack
+                subtract = word.count(")")
                 word = word.replace(")", "")
+                # update the information for the current condition
                 if  regions[region_index]["content"] and regions[region_index]["content"].split()[-1] == word:
                     region_number = regions[region_index]["region_number"]
                     if region_number not in OVERALL_DICT[condition_name]:
@@ -53,25 +56,17 @@ for line in open("single_particle.txt", "r"):
                     region_index += 1
                     if region_index == len(regions):
                         break
+
+                # pop off all of the closed NTs from the stack
                 if subtract:
-                    del curr_open_nt[-1]
+                    while subtract:
+                        del curr_open_nt[-1]
+                        subtract -= 1
+
         sentence_number += 1
 
-for key in OVERALL_DICT:
-    print(key)
-    for k in OVERALL_DICT[key]:
-        print(k, OVERALL_DICT[key][k])
-#print(sentence_number)
-
-TARGET_NUMBER = 3
-
-# for key in OVERALL_DICT:
-#     labels = list(OVERALL_DICT[key][TARGET_NUMBER].keys())
-#     values = list(OVERALL_DICT[key][TARGET_NUMBER].values())
-#     fig, ax = plt.subplots()
-#     ax.pie(values, labels=labels, shadow=False, startangle=90)
-
-for i in [5]:
+# plot the pie charts for each of the four cases
+for i in REGION_DATA:
     fig, ax  = plt.subplots(2, 2)
     fig.suptitle(f"Distribution of predicted NTs for {REGION_DATA[i]}")
     where_to_plot = [ax[0,0], ax[0,1], ax[1,0], ax[1,1]]
@@ -86,14 +81,3 @@ for i in [5]:
     plt.show()
 
 
-# Pie chart, where the slices will be ordered and plotted counter-clockwise:
-# labels = 'Frogs', 'Hogs', 'Dogs', 'Logs'
-# sizes = [15, 30, 45, 10]
-# explode = (0, 0.1, 0, 0)  # only "explode" the 2nd slice (i.e. 'Hogs')
-#
-# fig1, ax1 = plt.subplots()
-# ax1.pie(sizes, explode=explode, labels=labels, autopct='%1.1f%%',
-#         shadow=True, startangle=90)
-# ax1.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle.
-#
-# plt.show()

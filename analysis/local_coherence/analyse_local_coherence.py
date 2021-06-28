@@ -1,7 +1,10 @@
+"""Analyze the local coherence effects for each of the four cases"""
+
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 
+# contains the ambiguous and unambiguous verbs for each case
 WORDS = ["brought", "chosen", "brought", "chosen", "painted", "drawn", "painted", "drawn", "sent", "flown", "sent", "flown",
          "allowed", "forbidden", "allowed", "forbidden", "told", "forgiven", "told", "forgiven",
          "offered", "given", "offered", "given", "taught", "given", "taught", "given", "served", "given",
@@ -11,10 +14,12 @@ WORDS = ["brought", "chosen", "brought", "chosen", "painted", "drawn", "painted"
          "tossed", "thrown", "knitted", "woven", "knitted", "woven", "mailed", "written", "mailed", "written",
          "saved", "given", "saved", "given", "planted", "grown", "planted", "grown"]
 
+# a dictionary to store the surprisals
 TARGET_SUPRISAL_DICT = {}
 
+# consider each of the files separately and average them
 for i in range(10):
-    df = pd.read_csv(f"100-lc-{i+1}.txt", sep="\t")
+    df = pd.read_csv(f"bllip-particle-results/100-lc-{i+1}.txt", sep="\t")
     for sent_num in set(df["sentence_id"]):
         sentence = df[(df["sentence_id"] == sent_num)]
         words = list(sentence["token"])
@@ -30,8 +35,8 @@ for i in range(10):
             TARGET_SUPRISAL_DICT[sent_num] = []
         TARGET_SUPRISAL_DICT[sent_num].append(target_surprisals)
 
-print(TARGET_SUPRISAL_DICT)
 
+# create the separate data for each of the four cases and average across them, then plot
 A_R = {}
 A_U = {}
 U_R = {}
@@ -54,9 +59,7 @@ fig, ax = plt.subplots()
 plt.title(f"Local Coherence Effects for Particle Filter, k=100")
 idx = 0
 for key in [A_R, A_U, U_R, U_U]:
-    print(key.values())
     means = [np.mean(np.asarray([x[i] for x in key.values()])) for i in range(9)]
-    print("MEANS", means)
     stderrs = [np.std(np.asarray([x[i] for x in key.values()]))/np.sqrt(20) for i in range(9)]
     ax.errorbar(X, means, yerr=stderrs, label=PLOT_LABELS[idx])
     idx += 1

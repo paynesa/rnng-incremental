@@ -1214,7 +1214,6 @@ vector<double> log_prob_parser_particle_2(ComputationGraph* hg,
         //iterate through the sentence
         for (unsigned w_index = 0; w_index < sent.size(); ++w_index) {
             // print out the parses if we're at the end of the sentence
-            //TODO: sample so we're not printing out 100 parses
             if (w_index == sent.size() - 1) {
                 for (unsigned y = 0; y < num_particles; y++) {
                     int shift_count = 0;
@@ -1318,8 +1317,8 @@ vector<double> log_prob_parser_particle_2(ComputationGraph* hg,
                     delete p_state_action;
                     assert(m_vect[y]->log_prob_additional_parse == new_score);
                 }
-
             }
+
             //get the total for re-normalization and for computing surprisal, using the log-sum-exp trick to avoid underflow
             float c = 0;
             //first, find the max log probability
@@ -1336,7 +1335,7 @@ vector<double> log_prob_parser_particle_2(ComputationGraph* hg,
             //get the vector of re-normalized resampling probabilities and create a distribution from which to sample
             vector<float> resample_vect;
             for (unsigned i = 0; i < word_beam_size; i++) {
-                resample_vect.push_back(exp(particles[i]->log_prob_additional_parse - log_sum));
+                resample_vect.push_back(exp(m_vect[i]->log_prob_additional_parse - log_sum));
             }
             std::discrete_distribution<> resample_distribution(resample_vect.begin(), resample_vect.end());
             //sample from the distribution iteratively to get a set of new particles
@@ -1362,13 +1361,18 @@ vector<double> log_prob_parser_particle_2(ComputationGraph* hg,
                 currstate->log_prob_additional_parse = re->log_prob_additional_parse;
                 particles.push_back(currstate);
             }
+            float total_prob = 0;
+            for (unsigned p = 0; p < num_particles; p++){
+                total_prob += particles[p]->log_prob_additional_parse;
+            }
+            for (unsigned p = 0; p < num_particles; p++){
+                particles[p]->log_prob_additional_parse = (particles[p]->log_prob_additional_parse)/total_prob;
+            }
             //surprisal = log(N/sum(P(w|C))) = log(N) - log(sum(P(w|C)))
             surprisals.push_back(log(num_particles) - (log_sum));
             //clear the vector of m parses
-            for (unsigned i = 0; i < m_vect.size(); i ++ ){
-                delete m_vect[i];
-                m_vect.clear();
-            }
+            for (unsigned i = 0; i < m_vect.size(); i ++ ){delete m_vect[i];}
+            m_vect.clear();
         }
         //free memory from the remaining particles and return the surprisals
         for (unsigned i = 0; i < particles.size(); i++){delete particles[i];}
@@ -1686,7 +1690,7 @@ int main(int argc, char** argv) {
         }
         else {
             cerr << "Running particle filtering with " << NUM_PARTICLES << " particles\n";
-            surprisals = parser.log_prob_parser_particle_2(&hg, sentence, &right, NUM_PARTICLES, WORD_BEAM_SIZE, false);
+            surprisals = parser.log_prob_parser_particle_2(&hg, sentence, &right, NUM_PARTICLES, BEAM_SIZE, false);
         }
         //write out the surprisals
         for(unsigned k = 0; k < surprisals.size(); ++k){

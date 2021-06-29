@@ -12,3 +12,5 @@ dynet
 EVALB
 build
 .idea
+analysis/local_coherence/train_parses_bllip.txt
+analysis/local_coherence/train_parses_ptb.txt

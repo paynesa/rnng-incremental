@@ -22,14 +22,15 @@ for line in open("train_parses.txt", "r"):
         if "(" in word:
             curr_open_nt.append(word.replace("(", ""))
         else:
-            subtract = ")" in word
+            subtract = word.count(")")
             word = word.replace(")", "")
             if curr_open_nt[-1] == "VBN" and "(" not in word:
                 if word not in OVERALL_DICT:
                     OVERALL_DICT[word] = 0
                 OVERALL_DICT[word] += 1
-            if subtract:
+            while subtract:
                 del curr_open_nt[-1]
+                subtract -= 1
 
 
     #

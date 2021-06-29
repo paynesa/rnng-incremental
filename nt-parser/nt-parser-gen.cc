@@ -988,7 +988,8 @@ vector<double> log_prob_parser_particle(ComputationGraph* hg,
 
         //store the surprisals to return at the end
         vector<double> surprisals;
-        std::default_random_engine generator;
+        std::random_device rd;
+        std::default_random_engine generator(rd());
 
         //iterate through the sentence
         for (unsigned w_index = 0; w_index < sent.size(); ++w_index) {
@@ -1209,12 +1210,13 @@ vector<double> log_prob_parser_particle_2(ComputationGraph* hg,
 
         //store the surprisals to return at the end
         vector<double> surprisals;
-        std::default_random_engine generator;
+        std::random_device rd;
+        std::default_random_engine generator(rd());
 
         //iterate through the sentence
         for (unsigned w_index = 0; w_index < sent.size(); ++w_index) {
             // print out the parses if we're at the end of the sentence
-            if (w_index == sent.size() - 1) {
+            if (w_index == sent.size()-1) {
                 for (unsigned y = 0; y < num_particles; y++) {
                     int shift_count = 0;
                     for (auto action : particles[y]->results) {
@@ -1363,6 +1365,7 @@ vector<double> log_prob_parser_particle_2(ComputationGraph* hg,
             }
             //surprisal = log(N/sum(P(w|C))) = log(N) - log(sum(P(w|C)))
             surprisals.push_back(log(word_beam_size) - (log_sum));
+            //re-normalize all of the probabilities
             c = 0;
             //first, find the max log probability
             for (unsigned i = 0; i < num_particles; i++) {
@@ -1698,7 +1701,8 @@ int main(int argc, char** argv) {
         }
         else {
             cerr << "Running particle filtering with " << NUM_PARTICLES << " particles\n";
-            surprisals = parser.log_prob_parser_particle_2(&hg, sentence, &right, NUM_PARTICLES, BEAM_SIZE, false);
+            //surprisals = parser.log_prob_parser_particle_2(&hg, sentence, &right, NUM_PARTICLES, 10, false);
+            surprisals = parser.log_prob_parser_particle(&hg, sentence, &right, NUM_PARTICLES,  false);
         }
         //write out the surprisals
         for(unsigned k = 0; k < surprisals.size(); ++k){

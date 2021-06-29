@@ -1057,7 +1057,7 @@ vector<double> log_prob_parser_particle(ComputationGraph* hg,
                         shift_count++;
                     }
                 }
-		cerr << "\t" << exp(particles[y]->log_prob_additional_parse);
+		        cerr << "\t" << exp(particles[y]->log_prob_additional_parse);
                 //cerr << exp(particles[y]->log_prob_additional_parse) << " " << particles[y]->stack.size();
                 cerr << endl;}
             }
@@ -1361,15 +1361,23 @@ vector<double> log_prob_parser_particle_2(ComputationGraph* hg,
                 currstate->log_prob_additional_parse = re->log_prob_additional_parse;
                 particles.push_back(currstate);
             }
-            float total_prob = 0;
-            for (unsigned p = 0; p < num_particles; p++){
-                total_prob += particles[p]->log_prob_additional_parse;
-            }
-            for (unsigned p = 0; p < num_particles; p++){
-                particles[p]->log_prob_additional_parse = (particles[p]->log_prob_additional_parse)/total_prob;
-            }
             //surprisal = log(N/sum(P(w|C))) = log(N) - log(sum(P(w|C)))
-            surprisals.push_back(log(num_particles) - (log_sum));
+            surprisals.push_back(log(word_beam_size) - (log_sum));
+            c = 0;
+            //first, find the max log probability
+            for (unsigned i = 0; i < num_particles; i++) {
+                if (m_vect[i]->log_prob_additional_parse > c) c = particles[i]->log_prob_additional_parse;
+            }
+            //add up e^(x-c) across all x
+            log_sum = 0;
+            for (unsigned i = 0; i < num_particles; i++) {
+                log_sum += exp(particles[i]->log_prob_additional_parse - c);
+            }
+            //log sum exp rule
+            log_sum = log(log_sum) + c;
+            for (unsigned p = 0; p < num_particles; p++){
+                particles[p]->log_prob_additional_parse = (particles[p]->log_prob_additional_parse - log_sum);
+            }
             //clear the vector of m parses
             for (unsigned i = 0; i < m_vect.size(); i ++ ){delete m_vect[i];}
             m_vect.clear();

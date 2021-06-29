@@ -1120,6 +1120,261 @@ vector<double> log_prob_parser_particle(ComputationGraph* hg,
         particles.clear();
         return surprisals;
     }
+vector<double> log_prob_parser_particle_2(ComputationGraph* hg,
+                                            const parser::Sentence& sent,
+                                            double *right,
+                                            unsigned num_particles,
+                                            unsigned word_beam_size,
+                                            bool is_evaluation) {
+        //make sure that the sentence isn't empty
+        assert(sent.size() > 0);
+        //check if we're applying dropout and apply it if we are
+        bool apply_dropout = (DROPOUT && !is_evaluation);
+        if (apply_dropout) {
+            stack_lstm.set_dropout(DROPOUT);
+            term_lstm.set_dropout(DROPOUT);
+            action_lstm.set_dropout(DROPOUT);
+            const_lstm_fwd.set_dropout(DROPOUT);
+            const_lstm_rev.set_dropout(DROPOUT);
+        } else {
+            stack_lstm.disable_dropout();
+            term_lstm.disable_dropout();
+            action_lstm.disable_dropout();
+            const_lstm_fwd.disable_dropout();
+            const_lstm_rev.disable_dropout();
+        }
+
+        //initialize the computation graphs here
+        term_lstm.new_graph(*hg);
+        stack_lstm.new_graph(*hg);
+        action_lstm.new_graph(*hg);
+        const_lstm_fwd.new_graph(*hg);
+        const_lstm_rev.new_graph(*hg);
+        cfsm->new_graph(*hg);
+        term_lstm.start_new_sequence();
+        stack_lstm.start_new_sequence();
+        action_lstm.start_new_sequence();
+
+        // variables in the computation graph representing the parameters
+        Expression pbias = parameter(*hg, p_pbias);
+        Expression S = parameter(*hg, p_S);
+        Expression A = parameter(*hg, p_A);
+        Expression T = parameter(*hg, p_T);
+        Expression cbias = parameter(*hg, p_cbias);
+        Expression p2a = parameter(*hg, p_p2a);
+        Expression abias = parameter(*hg, p_abias);
+        Expression action_start = parameter(*hg, p_action_start);
+        Expression cW = parameter(*hg, p_cW);
+        //add the inputs to the LSTMs
+        action_lstm.add_input(action_start);
+        term_lstm.add_input(lookup(*hg, p_w, kSOS));
+        stack_lstm.add_input(parameter(*hg, p_stack_guard));
+
+        //a vector in which we'll store the particles
+        vector<ParserState*> particles;
+        //intialize each particle
+        for (unsigned i = 0; i < num_particles; i++){
+            vector<unsigned> results;
+            // -1 if no nonterminal has a parenthesis open, otherwise index of NT
+            vector<int> is_open_paren;
+            is_open_paren.push_back(-1);
+            // variables representing subtree embeddings
+            vector<Expression> stack;
+            //push the stack guard onto the stack
+            stack.push_back(parameter(*hg, p_stack_guard));
+            //initialize the stack and term lstms
+            vector<Expression> terms(1, lookup(*hg, p_w, kSOS));
+            vector<string> stack_content;
+            stack_content.push_back("ROOT_GUARD");
+            ParserState* currstate = new ParserState();
+            currstate->stack_lstm = stack_lstm;
+            currstate->term_lstm = term_lstm;
+            currstate->action_lstm = action_lstm;
+            currstate->const_lstm_fwd = const_lstm_fwd;
+            currstate->const_lstm_rev = const_lstm_rev;
+            currstate->terms = terms;
+            currstate->is_open_paren = is_open_paren;
+            currstate->nt_count = 0;
+            currstate->stack = stack;
+            currstate->stack_content = stack_content;
+            currstate->results = results;
+            currstate->score = 0;
+            currstate->nopen_parens = 0;
+            currstate->prev_a = '0';
+            currstate->fringe_index = 0;
+            currstate->log_posterior_parse = 0;
+            currstate->log_prob_additional_parse = 0;
+            particles.push_back(currstate);
+        }
+
+        //store the surprisals to return at the end
+        vector<double> surprisals;
+        std::default_random_engine generator;
+
+        //iterate through the sentence
+        for (unsigned w_index = 0; w_index < sent.size(); ++w_index) {
+            // print out the parses if we're at the end of the sentence
+            //TODO: sample so we're not printing out 100 parses
+            if (w_index == sent.size() - 1) {
+                for (unsigned y = 0; y < num_particles; y++) {
+                    int shift_count = 0;
+                    for (auto action : particles[y]->results) {
+                        const string &a = adict.convert(action);
+                        if (a[0] == 'R') cerr << ")";
+                        if (a[0] == 'N') {
+                            int nt = action2NTindex[action];
+                            cerr << " (" << ntermdict.convert(nt);
+                        }
+                        if (a[0] == 'S') {
+                            cerr << " " << termdict.convert(sent.raw[shift_count]);
+                            shift_count++;
+                        }
+                    }
+                    cerr << "\t" << exp(particles[y]->log_prob_additional_parse);
+                    cerr << endl;
+                }
+            }
+            // sample m particles which we will expand until they reach SHIFT
+            vector<float> dvect;
+            for (unsigned i = 0; i < particles.size(); i++) {
+                dvect.push_back(particles[i]->log_prob_additional_parse);
+            }
+            //create a distribution from which we will sample from
+            std::discrete_distribution<> distribution(dvect.begin(), dvect.end());
+            // sample m times from this distribution, and create a new state in memory for each one
+            vector<ParserState *> m_vect;
+            for (unsigned i = 0; i < word_beam_size; i++) {
+                ParserState *curr_sampled_particle = particles[distribution(generator)];
+                ParserState *currstate = new ParserState();
+                currstate->stack_lstm = curr_sampled_particle->stack_lstm;
+                currstate->term_lstm = curr_sampled_particle->term_lstm;
+                currstate->action_lstm = curr_sampled_particle->action_lstm;
+                currstate->const_lstm_fwd = curr_sampled_particle->const_lstm_fwd;
+                currstate->const_lstm_rev = curr_sampled_particle->const_lstm_rev;
+                currstate->terms = curr_sampled_particle->terms;
+                currstate->is_open_paren = curr_sampled_particle->is_open_paren;
+                currstate->nt_count = curr_sampled_particle->nt_count;
+                currstate->stack = curr_sampled_particle->stack;
+                currstate->stack_content = curr_sampled_particle->stack_content;
+                currstate->results = curr_sampled_particle->results;
+                currstate->score = curr_sampled_particle->score;
+                currstate->nopen_parens = curr_sampled_particle->nopen_parens;
+                currstate->prev_a = curr_sampled_particle->prev_a;
+                currstate->fringe_index = curr_sampled_particle->fringe_index;
+                currstate->log_posterior_parse = curr_sampled_particle->log_posterior_parse;
+                currstate->log_prob_additional_parse = curr_sampled_particle->log_prob_additional_parse;
+                m_vect.push_back(currstate);
+            }
+            assert(m_vect.size() == word_beam_size);
+            for (unsigned i = 0; i < particles.size(); i++) { delete particles[i]; }
+            particles.clear();
+            //iterate through the m particles and expand each until we reach a shift action
+            for (unsigned y = 0; y < m_vect.size(); y++) {
+                char a_char = '0';
+                //repeatedly sample until we reach a SHIFT operation
+                while (a_char != 'S') {
+                    //get the valid actions for the current particle
+                    vector<unsigned> current_valid_actions;
+                    for (auto a: possible_actions) {
+                        if (canDoAction(adict.convert(a), m_vect[y])) current_valid_actions.push_back(a);
+                    }
+                    //get the stack, action, and term summaries from the LSTMs, applying dropout if needed
+                    Expression stack_summary = m_vect[y]->stack_lstm.back();
+                    Expression action_summary = m_vect[y]->action_lstm.back();
+                    Expression term_summary = m_vect[y]->term_lstm.back();
+                    if (apply_dropout) {
+                        stack_summary = dropout(stack_summary, DROPOUT);
+                        action_summary = dropout(action_summary, DROPOUT);
+                        term_summary = dropout(term_summary, DROPOUT);
+                    }
+                    //get the action distribution expression over the current valid actions
+                    Expression p_t = affine_transform({pbias, S, stack_summary, A, action_summary, T, term_summary});
+                    Expression nlp_t = rectify(p_t);
+                    Expression r_t = affine_transform({abias, p2a, nlp_t});
+                    Expression adiste = log_softmax(r_t, current_valid_actions);
+
+                    //select an action to pursue by first creating a representative distribution
+                    vector<float> dvect;
+                    for (unsigned i = 0; i < current_valid_actions.size(); i++) {
+                        dvect.push_back(exp(as_scalar(pick(adiste, current_valid_actions[i]).value())));
+                    }
+                    //create a distribution and sample the action from it
+                    std::discrete_distribution<> distribution(dvect.begin(), dvect.end());
+                    int action = current_valid_actions[distribution(generator)];
+
+                    // set the character to correspond to the action
+                    a_char = adict.convert(action)[0];
+                    double new_score = 0;
+                    unsigned wordid = sent.raw[w_index];
+                    //re-weight by P(w_t|y) if the operation is a shift
+                    if (a_char == 'S') { new_score = as_scalar((-cfsm->neg_log_softmax(nlp_t, wordid)).value()); }
+                    //apply the action and update the particle so we can proceed until we reach a shift
+                    ParserStateAction *p_state_action = new ParserStateAction(m_vect[y], action, a_char, wordid,
+                                                                              new_score, 0);
+                    ParserState *newstate = p_state_action->applyAction(hg, cbias, cW, p_a, p_w, p_nt, p_ntup,
+                                                                        apply_dropout);
+                    delete m_vect[y];
+                    m_vect[y] = newstate;
+                    delete p_state_action;
+                    assert(m_vect[y]->log_prob_additional_parse == new_score);
+                }
+
+            }
+            //get the total for re-normalization and for computing surprisal, using the log-sum-exp trick to avoid underflow
+            float c = 0;
+            //first, find the max log probability
+            for (unsigned i = 0; i < word_beam_size; i++) {
+                if (m_vect[i]->log_prob_additional_parse > c) c = m_vect[i]->log_prob_additional_parse;
+            }
+            //add up e^(x-c) across all x
+            float log_sum = 0;
+            for (unsigned i = 0; i < word_beam_size; i++) {
+                log_sum += exp(m_vect[i]->log_prob_additional_parse - c);
+            }
+            //log sum exp rule
+            log_sum = log(log_sum) + c;
+            //get the vector of re-normalized resampling probabilities and create a distribution from which to sample
+            vector<float> resample_vect;
+            for (unsigned i = 0; i < word_beam_size; i++) {
+                resample_vect.push_back(exp(particles[i]->log_prob_additional_parse - log_sum));
+            }
+            std::discrete_distribution<> resample_distribution(resample_vect.begin(), resample_vect.end());
+            //sample from the distribution iteratively to get a set of new particles
+            for (unsigned p = 0; p < num_particles; p++) {
+                ParserState *re = m_vect[resample_distribution(generator)];
+                ParserState *currstate = new ParserState();
+                currstate->stack_lstm = re->stack_lstm;
+                currstate->term_lstm = re->term_lstm;
+                currstate->action_lstm = re->action_lstm;
+                currstate->const_lstm_fwd = re->const_lstm_fwd;
+                currstate->const_lstm_rev = re->const_lstm_rev;
+                currstate->terms = re->terms;
+                currstate->is_open_paren = re->is_open_paren;
+                currstate->nt_count = re->nt_count;
+                currstate->stack = re->stack;
+                currstate->stack_content = re->stack_content;
+                currstate->results = re->results;
+                currstate->score = re->score;
+                currstate->nopen_parens = re->nopen_parens;
+                currstate->prev_a = re->prev_a;
+                currstate->fringe_index = re->fringe_index;
+                currstate->log_posterior_parse = re->log_posterior_parse;
+                currstate->log_prob_additional_parse = re->log_prob_additional_parse;
+                particles.push_back(currstate);
+            }
+            //surprisal = log(N/sum(P(w|C))) = log(N) - log(sum(P(w|C)))
+            surprisals.push_back(log(num_particles) - (log_sum));
+            //clear the vector of m parses
+            for (unsigned i = 0; i < m_vect.size(); i ++ ){
+                delete m_vect[i];
+                m_vect.clear();
+            }
+        }
+        //free memory from the remaining particles and return the surprisals
+        for (unsigned i = 0; i < particles.size(); i++){delete particles[i];}
+        particles.clear();
+        return surprisals;
+    }
 };
 
 /**Signal handler for graceful termination*/
@@ -1431,7 +1686,7 @@ int main(int argc, char** argv) {
         }
         else {
             cerr << "Running particle filtering with " << NUM_PARTICLES << " particles\n";
-            surprisals = parser.log_prob_parser_particle(&hg, sentence, &right, NUM_PARTICLES, false);
+            surprisals = parser.log_prob_parser_particle_2(&hg, sentence, &right, NUM_PARTICLES, WORD_BEAM_SIZE, false);
         }
         //write out the surprisals
         for(unsigned k = 0; k < surprisals.size(); ++k){

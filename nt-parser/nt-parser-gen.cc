@@ -992,8 +992,8 @@ vector<double> log_prob_parser_particle(ComputationGraph* hg,
 
         //iterate through the sentence
         for (unsigned w_index = 0; w_index < sent.size(); ++w_index) {
-            cerr << "Current word: " << termdict.convert(sent.raw[w_index]) << " ,index " << w_index << endl;
-            cerr << "List of partial parses: \n";
+            //cerr << "Current word: " << termdict.convert(sent.raw[w_index]) << " ,index " << w_index << endl;
+            //cerr << "List of partial parses: \n";
             for (unsigned y = 0; y < num_particles; y++) {
                 //repeatedly sample until we reach a shift operation
                 char a_char = '0';
@@ -1043,7 +1043,8 @@ vector<double> log_prob_parser_particle(ComputationGraph* hg,
                     assert(particles[y]->log_prob_additional_parse == new_score);
                 }
                 // print out the partial parses
-                int shift_count = 0;
+                if(w_index == sent.size()-1){
+		int shift_count = 0;
                 for (auto action : particles[y]->results){
                     const string& a = adict.convert(action);
                     if (a[0] == 'R') cerr << ")";
@@ -1056,8 +1057,9 @@ vector<double> log_prob_parser_particle(ComputationGraph* hg,
                         shift_count++;
                     }
                 }
-                cerr << exp(particles[y]->log_prob_additional_parse) << " " << particles[y]->stack.size();
-                cerr << endl;
+		cerr << "\t" << exp(particles[y]->log_prob_additional_parse);
+                //cerr << exp(particles[y]->log_prob_additional_parse) << " " << particles[y]->stack.size();
+                cerr << endl;}
             }
             //resample the particles based on the updated weights
             vector<ParserState*> resampled;

@@ -7,7 +7,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # keep track of the values of k we're considering
-PARTICLE_NUMBERS = [1, 10, 20, 30, 40, 50, 60]
+PARTICLE_NUMBERS = [1, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140]
 
 #keep track of the means and stderrs for each value of k for each of the 3 cases
 SHORT_MEANS = []
@@ -19,6 +19,7 @@ VERY_LONG_STDERRS = []
 
 # calculate means and stderrs for each value of k
 for particle_number in PARTICLE_NUMBERS:
+    print(particle_number)
     DIFFERENCES = []
     # average over the 10 runs
     for i in range(10):

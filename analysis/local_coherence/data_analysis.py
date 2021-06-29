@@ -17,7 +17,7 @@ AMBIG_DICT = {}
 OVERALL_DICT = {}
 i = 0
 # iterate through the gold parses from the training file
-for line in open("train_parses_ptb.txt", "r"):
+for line in open("train_parses_bllip.txt", "r"):
     if i % 1000 == 0:
         print(i)
     i += 1
@@ -62,6 +62,7 @@ print(f"P(v_u|VBN) = {unambig_avg} on average, while class probability is {unamb
 
 # plot the distribution of NTs for the ambiguous and unambiguous verbs
 fig, ax = plt.subplots(1,2)
+fig.suptitle("Bllip Distribution")
 wp = {'linewidth': 0.5, 'edgecolor': "black"}
 ax[0].pie(UNAMBIG_DICT.values(), labels=UNAMBIG_DICT.keys(), startangle=90, autopct='%1.1f%%', wedgeprops=wp)
 ax[0].set_title("unambiguous distribution")
@@ -73,8 +74,9 @@ plt.show()
 UNAMBIG_DICT = {word :OVERALL_DICT[word] for word in UNAMBIGUOUS if word in OVERALL_DICT}
 AMBIG_DICT = {word : OVERALL_DICT[word] for word in AMBIGUOUS if word in OVERALL_DICT}
 
-# plot the distribution of words for each of the two cases 
+# plot the distribution of words for each of the two cases
 fig, ax = plt.subplots(1,2)
+fig.suptitle("Bllip Distribution")
 wp = {'linewidth': 0.5, 'edgecolor': "black"}
 ax[0].pie(UNAMBIG_DICT.values(), labels=UNAMBIG_DICT.keys(), startangle=90, autopct='%1.1f%%', wedgeprops=wp)
 ax[0].set_title("unambiguous distribution")

@@ -19,9 +19,9 @@ REGION_DATA = {
 
 # a list of the values of k used
 #PARTICLE_NUMBERS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 20, 30, 40]
-PARTICLE_NUMBERS = [1, 10, 20, 30, 40, 50, 60, 70, 80, 90]#, 100, 110, 120, 130, 140, 150]
+PARTICLE_NUMBERS = [1, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150]
 # the region we're currently considering
-REGION_NUMBER = 3
+REGION_NUMBER = 2
 
 # load in the meta data about the sentences from the JSON files
 META_DATA = []
@@ -45,7 +45,7 @@ for num_particle in PARTICLE_NUMBERS:
         # the temporary dict stores mappings from the condition to the list of surprisals for that file
         temp_dict = {}
         #file = pd.read_csv(f"mvrr_{num_particle}_{i + 1}.txt", sep="\t")
-        file = pd.read_csv(f"beam_bllip_results/{num_particle}-mvrr-{i + 1}.txt",
+        file = pd.read_csv(f"beam_ptb_results/{num_particle}-mvrr-{i + 1}.txt",
                            sep="\t")
         for i in range(len(META_DATA)):
             sentence = file[file["sentence_id"] == i + 1]
@@ -86,10 +86,10 @@ for num_particle in PARTICLE_NUMBERS:
 
 # graph the results_bllip
 fig, ax = plt.subplots()
-plt.title(f"Particle Filter Surprisals for MVRR at {REGION_DATA[REGION_NUMBER]}")
+plt.title(f"PTB Beam Search Surprisals for MVRR at {REGION_DATA[REGION_NUMBER]}")
 for key in MEAN_DICT:
     ax.errorbar(PARTICLE_NUMBERS, MEAN_DICT[key], yerr=STDERR_DICT[key], label=key)
 plt.ylabel("mean surprisal")
-plt.xlabel("number of particles")
+plt.xlabel("beam size")
 plt.legend()
 plt.show()

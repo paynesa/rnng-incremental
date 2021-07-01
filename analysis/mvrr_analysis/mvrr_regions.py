@@ -40,7 +40,7 @@ overall_dict = {}
 for i in range(NUM_RUNS):
     # the temporary dict stores mappings from the condition to the list of surprisals for that file
     temp_dict = {}
-    file = pd.read_csv(f"particle_bllip_results/100-mvrr-{i + 1}.txt", sep="\t")
+    file = pd.read_csv(f"random_fix_bllip/100-mvrr-{i + 1}.txt", sep="\t")
     for j in range(len(META_DATA)):
         sentence = file[file["sentence_id"] == j + 1]
         counter = 0
@@ -49,7 +49,7 @@ for i in range(NUM_RUNS):
             temp_dict[condition_name] = {}
         for region in META_DATA[j]["regions"]:
             counter += len(region["content"].split())
-            # get the surprisal in the target region
+            # get the surprisal in the target region and store it in a temporary mapping to the corresponding condition
             region_number = region["region_number"]
             surprisal = np.asarray(sentence["surprisal"])[counter - 1]
             if region_number not in temp_dict[condition_name]:
@@ -64,6 +64,8 @@ for i in range(NUM_RUNS):
             if key2 not in overall_dict[key]:
                 overall_dict[key][key2] = []
             overall_dict[key][key2].append(temp_dict[key][key2])
+
+# get the means for stderr by averaging across the specific sentences for each of the files
 means_for_stderr = {}
 for key in overall_dict:
     if key not in means_for_stderr:
@@ -71,25 +73,25 @@ for key in overall_dict:
     for region_number in overall_dict[key]:
         means = [np.mean(np.asarray([curr_list[i] for curr_list in overall_dict[key][region_number]])) for i in range(len(overall_dict[key][region_number][0]))]
         means_for_stderr[key][region_number] = means
-        print(means)
 
+# get the cross-condition means for each of the six positions
 cross_condition_means = {}
 for region_number in REGION_DATA:
     things_to_take_mean_of = [means_for_stderr[condition_name][region_number] for condition_name in overall_dict]
     means = [np.mean(np.asarray([curr_list[i] for curr_list in things_to_take_mean_of])) for i in range(len(things_to_take_mean_of[0]))]
     cross_condition_means[region_number] = means
-print(cross_condition_means)
 
+# plot the means and stderrs
 fig, ax = plt.subplots()
-plt.title("Hello")
+plt.title("Particle Filter MVRR Results")
 for condition_name in means_for_stderr:
     current_means = [np.mean(np.asarray([means_for_stderr[condition_name][i] ])) for i in REGION_DATA]
     new_means = [([means_for_stderr[condition_name][region_number][i] - cross_condition_means[region_number][i] for i in range(len(cross_condition_means[region_number]))]) for region_number in REGION_DATA]
     current_stderrs = [np.std(np.asarray(new_means[i]))/np.sqrt(len(new_means[i])) for i in range(len(new_means))]
-    print(new_means)
-    print(current_means, condition_name)
     ax.errorbar(list(REGION_DATA.keys()), current_means,
                 yerr=current_stderrs, label=condition_name)
+plt.ylabel("mean surprisal")
+plt.xlabel("number of particles")
 plt.legend()
 plt.show()
 

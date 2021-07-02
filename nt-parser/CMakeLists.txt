@@ -10,3 +10,6 @@ target_link_libraries(nt-parser-gen dynet ${Boost_LIBRARIES} z)
 ADD_EXECUTABLE(nt-parser-gen-action-only nt-parser-gen-action-only.cc oracle.cc pretrained.cc)
 target_link_libraries(nt-parser-gen-action-only dynet ${Boost_LIBRARIES} z)
 
+ADD_EXECUTABLE(nt-parser-gen-bottom-up nt-parser-gen-bottom-up.cc oracle.cc pretrained.cc)
+target_link_libraries(nt-parser-gen-bottom-up dynet ${Boost_LIBRARIES} z)
+

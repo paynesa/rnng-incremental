@@ -40,7 +40,7 @@ overall_dict = {}
 for i in range(NUM_RUNS):
     # the temporary dict stores mappings from the condition to the list of surprisals for that file
     temp_dict = {}
-    file = pd.read_csv(f"random_fix_bllip/100-mvrr-{i + 1}.txt", sep="\t")
+    file = pd.read_csv(f"particle_ptb_results/100-mvrr-{i + 1}.txt", sep="\t")
     for j in range(len(META_DATA)):
         sentence = file[file["sentence_id"] == j + 1]
         counter = 0

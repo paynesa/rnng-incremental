@@ -19,7 +19,7 @@ TARGET_SUPRISAL_DICT = {}
 
 # consider each of the files separately and average them
 for i in range(10):
-    df = pd.read_csv(f"bllip-particle-results/100-lc-{i+1}.txt", sep="\t")
+    df = pd.read_csv(f"bllip-beam-results/100-lc-{i+1}.txt", sep="\t")
     for sent_num in set(df["sentence_id"]):
         sentence = df[(df["sentence_id"] == sent_num)]
         words = list(sentence["token"])
@@ -56,7 +56,7 @@ PLOT_LABELS = ["A/R",  "A/U", "U/R", "U/U"]
 X = [-4, -3, -2, -1, 0, 1, 2, 3, 4]
 xlabels = ["-4\nsmiled","-3\nat", "-2\nthe", "-1\nplayer", "0\ntossed/\nthrown", "1\na", "2\nfrisbee", "3\nby", "4\nthe"]
 fig, ax = plt.subplots()
-plt.title(f"Local Coherence Effects for Particle Filter, k=100")
+plt.title(f"Local Coherence Effects for Beam Search, k=100")
 idx = 0
 for key in [A_R, A_U, U_R, U_U]:
     means = [np.mean(np.asarray([x[i] for x in key.values()])) for i in range(9)]

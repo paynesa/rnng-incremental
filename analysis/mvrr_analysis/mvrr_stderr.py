@@ -45,7 +45,7 @@ for num_particle in PARTICLE_NUMBERS:
         # the temporary dict stores mappings from the condition to the list of surprisals for that file
         temp_dict = {}
         #file = pd.read_csv(f"mvrr_{num_particle}_{i + 1}.txt", sep="\t")
-        file = pd.read_csv(f"particle_ptb_results/{num_particle}-mvrr-{i + 1}.txt",
+        file = pd.read_csv(f"beam_bllip_results/{num_particle}-mvrr-{i + 1}.txt",
                            sep="\t")
         for i in range(len(META_DATA)):
             sentence = file[file["sentence_id"] == i + 1]

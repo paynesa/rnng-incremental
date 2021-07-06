@@ -1,0 +1,216 @@
+Running particle filtering with 1 particles
+ (S (NP The woman) (VP brought (PRT the) (NP (NP sandwich from the kitchen) fell (PP in (NP (NP the dining room	0.460063
+Running particle filtering with 1 particles
+ (S (NP The woman) (VP who was (S (VP brought (NP the sandwich) (NP from the kitchen)))) fell) in the dining room	0.0399721
+Running particle filtering with 1 particles
+ (S The woman) given the sandwich (NP (NP from the kitchen fell) (PP in (NP the dining room	0.51276
+Running particle filtering with 1 particles
+ (S (NP The woman) (VP who (NP (NP was given) the sandwich)) from (PP the kitchen fell) in (NP the dining room	0.447775
+Running particle filtering with 1 particles
+ (SINV (S (PP The convict) (NP walked) (VP into (NP (NP the dark cell tried to escape but) failed	2.05759e-06
+Running particle filtering with 1 particles
+ (S (S (NP The convict) (VP who (VP was (ADJP walked into the (S (VP dark)))))) cell (S (NP (NP tried to (NP escape))) (VP but failed	0.000798659
+Running particle filtering with 1 particles
+ (S The convict taken (NP into) (PP the dark (NP (NP cell tried) (PP to (NP escape)) but (NP failed	6.28274e-05
+Running particle filtering with 1 particles
+ (S (NP (NP The convict who) was (NP taken into (NP the dark cell))) (VP tried (S (VP to (VP escape (NP but failed	2.58204e-05
+Running particle filtering with 1 particles
+ (S The prisoners) hit (S (NP for) (VP hours (NP (NP (NP and (NP hours)) (PP confessed to (NP (NP crimes) (PP they (NP never committed	4.12439e-06
+Running particle filtering with 1 particles
+ (S (NP (NP The prisoners) (S (NP who) (VP were (VP hit (PP for (NP hours)))))) (VP and (VP hours (S (VP confessed (PP to (NP crimes)))))) they never committed	2.03782e-05
+Running particle filtering with 1 particles
+ (S (SBAR The prisoners (S (VP beaten (PP for (NP hours))))) and (S (NP hours) (VP confessed (ADVP to) (PP crimes))) they (ADVP never) (VP committed	0.000185456
+Running particle filtering with 1 particles
+ (SBARQ (WHNP The prisoners) (SQ who (NP were beaten for) (VP hours (ADVP and hours))) confessed (NP to (NP crimes)) they never (VP committed	0.000125099
+Running particle filtering with 1 particles
+ (S (NP The business) (VP (VP expanded (PP (PP into (NP an empire)) (PP was (NP sold))) (PP (PP for (NP billions)) of (NP dollars	0.923594
+Running particle filtering with 1 particles
+ (S The business) that was (ADJP expanded) into an empire (NP was) sold (ADVP for) billions (SBAR of (NP dollars	0.801964
+Running particle filtering with 1 particles
+ (S (NP The business) (VP grown (ADJP into an empire) (SBAR (WHADVP was) (S (NP sold for) (VP billions (NP of (NP dollars	0.934544
+Running particle filtering with 1 particles
+ (S (NP (NP The business that was) grown (NP (NP into) (PP an empire)) was (PP sold (PP for (NP billions)) (PP of (NP dollars	0.938169
+Running particle filtering with 1 particles
+ (S (PP The mice (NP consumed rapidly)) (NP and (NP entirely were)) (VP carrying (PRT a rare bacteria	7.23265e-05
+Running particle filtering with 1 particles
+ (S (NP (NP (NP The mice that were consumed rapidly) (PP and (NP entirely were))) carrying (NP (NP a rare bacteria	0.000409856
+Running particle filtering with 1 particles
+ (S (NP The mice) (VP consumed (NP (QP rapidly and entirely) were) carrying (NP (NP a rare bacteria	0.000390982
+Running particle filtering with 1 particles
+ (S (NP (NP (NP The mice that) were) (PRN consumed (NP (NP rapidly and entirely) (PP were (NP carrying a rare bacteria	0.000874601
+Running particle filtering with 1 particles
+ (SINV The (ADVP lawyer) (VP pledged (S (VP to (VP keep (S (NP silent was) (VP discovered (PP to (NP have broken his promise	0.000251349
+Running particle filtering with 1 particles
+ (S (NP (NP The lawyer) that (S (VP was (VP pledged (PP to (NP (NP keep silent was) (PP discovered to (NP have broken his promise	0.000280443
+Running particle filtering with 1 particles
+ (S (NP (NP The lawyer) committed) (VP to (VP keep (PP (PP silent (PP was (NP discovered to have))) broken) (PP his promise	9.78568e-06
+Running particle filtering with 1 particles
+ (S (NP The lawyer) (VP who (VP was (VP (VP committed (PP to (S (VP keep (NP silent was)))) (PP discovered (PP to (NP have broken his promise	0.000292868
+Running particle filtering with 1 particles
+ (S (PP The child) (SQ kicked (NP in the chaos)) found her) way back (ADVP home	0.00107163
+Running particle filtering with 1 particles
+ (S (NP The child) (VP who (VP was (VP (ADVP kicked) in (NP the chaos)))) found) her (S (VP way (PP back (NP home	0.00135363
+Running particle filtering with 1 particles
+ (S (SBAR The child) (VP forgotten (NP (NP in the chaos) (ADJP found) (PP her way (NP (NP back home	0.00643358
+Running particle filtering with 1 particles
+ (S (SBAR The child (S (NP who) (VP was (VP forgotten (PP in (NP the chaos)))))) found (NP her way) (PP back (PP home	4.22964e-07
+Running particle filtering with 1 particles
+ (S (NP (NP The horses) (VP UNK-LC-ed (PP past (NP the barn)))) (ADVP fell) (VP into (NP a swamp	0.000123028
+Running particle filtering with 1 particles
+ (S (VP The horses (NP that)) were) UNK-LC-ed past (S (VP the (S (VP barn (NP (NP fell into) (PP a swamp	7.55016e-06
+Running particle filtering with 1 particles
+ (S (NP (NP The (ADJP horses taken) past the barn) (PP fell (PP into (NP a swamp	7.4964e-05
+Running particle filtering with 1 particles
+ (S (ADVP The horses) (VP that (S (NP (NP were) (PP taken (NP past the barn))) (VP fell (PP into (NP (NP a swamp	9.94235e-05
+Running particle filtering with 1 particles
+ (S (S (NP The artist) (VP painted (NP (NP a impressionist portrait) (PP was (PP impressed (NP (NP with) (PP the work	1.38459e-05
+Running particle filtering with 1 particles
+ (S (NP (NP The artist) who (NP was painted a impressionist)) (VP portrait (SBAR (WHNP was (NP impressed)) (S (VP with (VP the work	0.00012013
+Running particle filtering with 1 particles
+ (S (NP The artist) (VP drawn (NP a impressionist portrait)) was (VP impressed (NP with the work	0.000191151
+Running particle filtering with 1 particles
+ (S (NP (NP The artist) (PP who (NP was))) (VP drawn (PRT a impressionist)) portrait) was impressed with (VP the (ADVP work	2.47004e-06
+Running particle filtering with 1 particles
+ (S The (X car) (NP steered into) the parking lot (NP crashed into) a concrete wall	0.000407593
+Running particle filtering with 1 particles
+ (S (PP The car) (VP that (PP was (NP steered into the parking))) lot crashed into (ADVP a)) concrete wall	1.17087e-05
+Running particle filtering with 1 particles
+ (S (PP The car driven (NP into the parking lot)) crashed (S (NP into) (VP a (S (VP concrete)))) wall	1.50131e-08
+Running particle filtering with 1 particles
+ (S (NP The car) (VP that (NP (NP was) (NP driven into)) (VP the (S (VP parking (NP lot))))) crashed) (VP into (S (VP a concrete wall	0.000147581
+Running particle filtering with 1 particles
+ (S (SBAR The campaign (S (VP intended (S (VP to (VP be (VP very popular (PP was (NP still unsuccessful	3.30476e-06
+Running particle filtering with 1 particles
+ (S (S (NP The campaign that) (VP was (NP (NP intended to be) (PP very (NP (NP (NP popular was still unsuccessful	2.84718e-05
+Running particle filtering with 1 particles
+ (S (NP The campaign) (VP known (SBAR to (NP (NP be very popular (PP was (NP still unsuccessful	3.09329e-06
+Running particle filtering with 1 particles
+ (S The campaign (S (NP that) (VP was (NP known to))) be very popular (PP was (NP (NP still unsuccessful	3.38308e-06
+Running particle filtering with 1 particles
+ (S (NP The student) (VP composed (PP a carefully)) worded) (SBAR (WHPP excuse (WHNP forgot)) (S (S (NP to (NP (NP give it))) (VP to the teacher	1.78309e-05
+Running particle filtering with 1 particles
+ (S (ADVP The) student (VP who (S (VP was (VP composed (PP a carefully))))) worded excuse (S (VP forgot (UCP (SBAR (WHADVP to) (S (NP give it) (VP to (VP the teacher	8.45012e-06
+Running particle filtering with 1 particles
+ (S (PP The student written) a carefully) worded (NP excuse) forgot to (SBAR give (S (NP it) (VP to (VP the teacher	4.04968e-06
+Running particle filtering with 1 particles
+ (S (NP The student who) (VP was (PP written (PP a carefully (ADJP (ADJP worded) excuse (PP forgot (S (VP to (VP give (NP it) (SBAR to (SBAR (WHADVP the teacher	9.74692e-07
+Running particle filtering with 1 particles
+ (S (NP The television show) (VP started (PP three weeks (NP ago))) was) canceled immediately	9.35859e-06
+Running particle filtering with 1 particles
+ (S (PP The television show) (VP that (NP (NP was) (NP started)) (PP three weeks (NP ago)) (PP was (NP (NP canceled immediately	1.93922e-07
+Running particle filtering with 1 particles
+ (S (NP (NP The television show) begun (NP three weeks)) (VP ago (NP was) (PP canceled (PP immediately	5.35397e-06
+Running particle filtering with 1 particles
+ (S (NP (NP The television show) that was (SBAR (WHPP begun (WHNP three weeks)) (S (NP ago was) (VP canceled (NP immediately	8.99312e-07
+Running particle filtering with 1 particles
+ (S (S (NP The boys) (VP performed (PP an unsolicited favor) (NP appreciated the person) (PP who (NP (NP helped them	1.29992e-06
+Running particle filtering with 1 particles
+ (S The boys (VP who (PP were (NP performed an unsolicited favor))) appreciated) the person who (S (NP helped them	5.51633e-06
+Running particle filtering with 1 particles
+ (S (S (NP The boys) (VP done (NP an unsolicited favor))) appreciated the person (FRAG (INTJ who) helped (S (VP them	2.1719e-06
+Running particle filtering with 1 particles
+ (S (S (ADVP The boys) (VP who were (VP done))) (PRN an (PP unsolicited favor)) appreciated the person (S (NP who) (VP helped (S (VP them	4.59899e-07
+Running particle filtering with 1 particles
+ (S The player (NP tossed) (VP the (ADVP (ADVP baseball) dropped (S (VP it (VP on (NP the ground	0.00601485
+Running particle filtering with 1 particles
+ (S The player (S (NP who) (VP was (VP tossed (PP the baseball dropped it) (ADVP (ADVP on) the (SBAR ground	2.66629e-07
+Running particle filtering with 1 particles
+ (S (NP (NP The player) thrown the baseball dropped it) (VP on (VP the (NP (NP ground	5.50072e-05
+Running particle filtering with 1 particles
+ (S The player (SBAR who (S (NP was (NP thrown)) (VP the (NP (NP baseball dropped it on) the ground	0.000516538
+Running particle filtering with 1 particles
+ (S (NP (NP The child) (SBAR (WHNP jumped) (S (VP past)))) (VP the (S (VP swings (PP was (NP (NP upset) (PP about (NP it	0.0104762
+Running particle filtering with 1 particles
+ (S (NP (NP The child) who (NP was)) (VP jumped (NP (NP past the swings) (PP was (NP upset))) (PP about (NP it	0.00686143
+Running particle filtering with 1 particles
+ (S (NP The (NX (NX child) led past)) (VP the (S (VP swings (NP (NP was) (NP (NP upset about) (PP it	4.79124e-08
+Running particle filtering with 1 particles
+ (S (NP The child) (VP who (PP was (NP led past the swings)) was (PP upset (NP (NP about it	8.64598e-07
+Running particle filtering with 1 particles
+ (S (ADVP The students) (VP prepared (S (VP a (S (VP fancy (S (ADJP dinner))))))) ate) (NP (NP the meal) (PP quickly	1.19112e-09
+Running particle filtering with 1 particles
+ (S The students) (VP who (PP were (ADJP prepared (S (VP a (S (VP fancy dinner)))) (PP ate (S (VP the meal)))))) quickly	8.46481e-08
+Running particle filtering with 1 particles
+ (S (PP The students) (VP gotten (ADJP a fancy) (ADVP dinner)) ate) (S (SBAR (WHNP the meal) (S (VP quickly	3.72176e-07
+Running particle filtering with 1 particles
+ (S (NP The students) (ADVP who) (VP were (ADJP gotten a fancy)) dinner) ate (NP (NP the meal) (PP quickly	3.29073e-09
+Running particle filtering with 1 particles
+ (S (ADVP The infant) (VP fed (NP during the night)) yelled) intensely	2.6167e-07
+Running particle filtering with 1 particles
+ (S (NP The infant that) (VP was (VP fed (PRT during) (ADVP the night) (S (VP yelled (PP intensely	5.62411e-08
+Running particle filtering with 1 particles
+ (S The infant aroused (NP during) (PP the night) (PP yelled intensely	1.32313e-06
+Running particle filtering with 1 particles
+ (S (NP The infant that) (VP was (VP aroused (PP during (NP (NP the night) (VP yelled (PP intensely	5.31143e-08
+Running particle filtering with 1 particles
+ (S (NP The refugee sheltered) (VP in) the) (VP basement (NP departed during the night	0.00696557
+Running particle filtering with 1 particles
+ (S (NP (NP The refugee who) was (NP (NP sheltered in) (VP the (NP basement)))) (NP departed during) the night	0.00338764
+Running particle filtering with 1 particles
+ (S (NP The refugee hidden in the basement) (VP departed (PP during (NP (NP the night	0.00268461
+Running particle filtering with 1 particles
+ (S (NP The refugee who) (VP was hidden (PP in (NP the basement)) (PP departed (PP during (NP the night	0.00369541
+Running particle filtering with 1 particles
+ (S (NP The dog) walked (PP on (NP (NP the beach) (PP UNK-LC-ed after (S (VP a (ADVP bird	1.74542e-06
+Running particle filtering with 1 particles
+ (S (NP (NP The dog) that was (SBAR (WHNP walked) (S (VP on (VP the (NP (QP beach UNK-LC-ed) after)))))) (VP a (S (VP bird	5.50484e-08
+Running particle filtering with 1 particles
+ (S The dog) (VP seen (PP on (NP (NP the beach UNK-LC-ed) after (NP a bird	0.000223196
+Running particle filtering with 1 particles
+ (S (NP The dog) (VP that (SBAR (SBAR was (S (NP seen on) (VP the (PP beach UNK-LC-ed)))) after (NP (NP a bird	0.000439316
+Running particle filtering with 1 particles
+ (S (NP The ship) (VP steered (PP off (NP course)) (PP sank (PP in (NP the storm	0.000290689
+Running particle filtering with 1 particles
+ (S (NP The ship) (VP that (S (ADVP was) (NP steered off) (PP course (NP sank in the storm	0.00045018
+Running particle filtering with 1 particles
+ (S (NP The ship) (VP blown (NP (NP off) (SBAR (WHNP course) (S (VP sank (ADVP in))))) (PP the storm	2.03044e-06
+Running particle filtering with 1 particles
+ (S (NP (NP The ship) that was) (VP (VP blown (NP (NP off course) (PP sank (PP in (NP the storm	0.000483177
+Running particle filtering with 1 particles
+ (S (NP (NP The fans) cheered) (VP at (NP the concert)) took photos with (S (NP their phones	0.000379107
+Running particle filtering with 1 particles
+ (S (SBAR The fans (S (VP that (PP were cheered at (NP the concert))))) took (NP photos) with (NP their phones	0.000254488
+Running particle filtering with 1 particles
+ (S (NP (NP The fans) (PP UNK-LC-ed (PP at the concert))) (VP took (NP photos) (PP with (NP their phones	0.000233358
+Running particle filtering with 1 particles
+ (S (NP (NP The fans) (PP that were (PP UNK-LC-ed))) (VP at the concert) took (PP photos (NP (NP with) (SBAR (WHNP their phones	0.000288698
+Running particle filtering with 1 particles
+ (S (NP The boat steered) (VP to (VP the sea disappeared)) in the storm	0.00029076
+Running particle filtering with 1 particles
+ (S (S (NP (NP The boat that was) (SBAR (WHNP steered) (S (VP in (NP the sea disappeared in))))) (VP the (NP storm	5.96953e-05
+Running particle filtering with 1 particles
+ (SINV The (S (NP boat sunk in) (VP the (NP (NP sea disappeared in) the storm	0.0002575
+Running particle filtering with 1 particles
+ (S (NP The boat) (VP that (S (NP (NP was (NP sunk in)) the sea disappeared) (VP in (NP the storm	0.000465943
+Running particle filtering with 1 particles
+ (S (NP The couple) (VP bought (NP the apartment) (PP moved (NP (NP (QP to a) different city	0.000520296
+Running particle filtering with 1 particles
+ (S (NP The couple) (VP that (PP was (ADJP bought)) (NP the apartment) (NP moved to (NP a (ADJP different (ADJP city	2.78508e-05
+Running particle filtering with 1 particles
+ (S (NP The couple) (VP (VP shown (SBAR (S (NP (NP the apartment) (PP moved (NP to a different city	0.0163237
+Running particle filtering with 1 particles
+ (S (NP The couple) (VP that (S (VP was (ADJP shown) the (ADVP apartment moved)))) to (VP a different) city	2.39769e-08
+Running particle filtering with 1 particles
+ (S (PP The girl (S (VP made (S (NP a new blanket lost it) (NP (NP during (PP the trip	1.66461e-05
+Running particle filtering with 1 particles
+ (S The girl who (NP was) (VP (VP made (NP a new blanket lost it)) during (NP (NP (NP the trip	0.000498669
+Running particle filtering with 1 particles
+ (S (NP (NP The girl given) (SBAR (S (NP a new blanket) (VP lost (NP (NP (NP (QP it during)) (PP the trip	1.72092e-05
+Running particle filtering with 1 particles
+ (S (NP The girl) (VP (VP who (S (ADJP was given)) (PP a new blanket)) lost (VP (VP it (VP during (NP the trip	0.00294781
+Running particle filtering with 1 particles
+ (S (NP The airplane) (VP landed (PP in (NP the mountains)) (PP broke (NP down))) during the (NP (NP ice) storm	2.03458e-06
+Running particle filtering with 1 particles
+ (S The airplane that) (NP was) (VP landed (PP in (NP the mountains)) (PP broke (PP down	0.00110165
+Running particle filtering with 1 particles
+ (S (S (NP The airplane) (VP flown (PP in (NP the mountains)))) broke) down during (NP (NP the ice) (PP storm	5.42344e-09
+Running particle filtering with 1 particles
+ (S (NP (NP The airplane that was) flown) (VP in (NP (QP the mountains broke) down) (ADVP (NP during) the ice)) storm	2.11716e-12
+Running particle filtering with 1 particles
+ (S (S (S (VP The (ADVP child) (PP carried (ADVP (NP down the hall) yelled))))) at the top of (NP (NP his lungs	8.9115e-05
+Running particle filtering with 1 particles
+ (S (ADVP The child) (VP that (S (VP was (VP carried (PRT down) (PP the hall))))) yelled) at (NP (NP (NP the top of his lungs	9.34875e-05
+Running particle filtering with 1 particles
+ (S (NP (NP The child) (PP borne (NP down))) (VP the (SBAR hall (S (NP yelled at (NP the top)) (VP of (NP his lungs	0.000276667
+Running particle filtering with 1 particles
+ (S (SBAR The child) (VP that (NP (NP was borne) down (ADVP (NP (QP the hall)) yelled))) at (S (S (NP (QP the top of his) lungs	0.000136589

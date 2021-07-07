@@ -519,6 +519,7 @@ struct ParserStateAction {
     } // do action: case REDUCE
     else if (a_char == 'R'){
       --p_state->nopen_parens;
+      cerr << "Reducing here. stack size: " << p_state->nt_stack.size() << " stack content size: " << p_state->nt_stack_content.size() << endl;
       assert(p_state->stack_content.size() + p_state->nt_stack.size() > 2 && p_state->stack.size() == p_state->stack_content.size() && p_state->nt_stack.size() == p_state->nt_stack_content.size());
       Expression nonterminal = p_state->nt_stack.back();
       int first_terminal_index = p_state->is_open_paren.back();
@@ -729,7 +730,10 @@ vector<double> log_prob_parser_beam(ComputationGraph* hg,
           //get all current valid actions at the parser state
           vector<unsigned> current_valid_actions;
           for (auto a: possible_actions) {
-              if (canDoAction(adict.convert(a), p_this)) current_valid_actions.push_back(a);
+              if (IsActionForbidden_Generative(adict.convert(a), prev_a, terms.size(), stack.size(), nopen_parens)){
+                  continue;
+              }
+              current_valid_actions.push_back(a);
           }
           //get the corresponding stack, action, and term summaries, and apply dropout if needed
           Expression stack_summary = p_this->stack_lstm.back();
@@ -978,7 +982,10 @@ vector<double> log_prob_parser_particle(ComputationGraph* hg,
                     //get the valid actions for the particle
                     vector<unsigned> current_valid_actions;
                     for (auto a: possible_actions) {
-                        if (canDoAction(adict.convert(a), particles[y])) current_valid_actions.push_back(a);
+                        if (IsActionForbidden_Generative(adict.convert(a), particles[y]->prev_a, particles[y]->terms.size(), particles[y]->stack.size(), particles[y]->nopen_parens)){
+                            continue;
+                        }
+                        current_valid_actions.push_back(a);
                     }
                     //get the stack, action, and term summaries from the LSTMs, applying dropout if needed
                     Expression stack_summary = particles[y]->stack_lstm.back();

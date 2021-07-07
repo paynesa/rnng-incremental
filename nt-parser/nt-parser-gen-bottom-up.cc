@@ -192,6 +192,7 @@ vector<unsigned> log_prob_parser(ComputationGraph* hg,
     vector<unsigned> results;
     vector<string> stack_content;
     stack_content.push_back("ROOT_GUARD");
+    vector<string> nt_stack_content;
     const bool sample = sent.size() == 0;
     const bool build_training_graph = correct_actions.size() > 0;
     assert(sample || build_training_graph);
@@ -246,6 +247,7 @@ vector<unsigned> log_prob_parser(ComputationGraph* hg,
     stack.push_back(parameter(*hg, p_stack_guard));
     // drive dummy symbol on stack through LSTM
     stack_lstm.add_input(stack.back());
+    vector <Expression> nt_stack;
     vector<int> is_open_paren; // -1 if no nonterminal has a parenthesis open, otherwise index of NT
     is_open_paren.push_back(-1); // corresponds to dummy symbol
     vector<Expression> log_probs;
@@ -256,7 +258,7 @@ vector<unsigned> log_prob_parser(ComputationGraph* hg,
     int nopen_parens = 0;
     char prev_a = '0';
     unsigned termc = 0;
-    while(stack.size() >= 2 || termc == 0) {
+    while(stack.size() > 2 || nt_count == 0 || nt_stack.size() > 0) {
       assert (stack.size() == stack_content.size());
       // get list of possible actions for the current parser state
       current_valid_actions.clear();
@@ -332,14 +334,8 @@ vector<unsigned> log_prob_parser(ComputationGraph* hg,
       const char ac2 = actionString[1];
       prev_a = ac;
 
-      if (ac =='S' && ac2=='H') {  // SHIFT
+      if (ac =='S' && ac2=='H') {  // SHIFT: simply add the word embedding to the stack
         unsigned wordid = 0;
-        //tworep
-        //Expression p_t = affine_transform({pbias2, S2, stack_lstm.back(), A2, action_lstm.back(), T, term_lstm.back()});
-        //Expression nlp_t = rectify(p_t);
-        //tworep-oneact:
-        //Expression p_t = affine_transform({pbias2, S2, stack_lstm.back(), T, term_lstm.back()});
-        //Expression nlp_t = rectify(p_t);
         if (sample) {
           wordid = cfsm->sample(nlp_t);
           cerr << " " << termdict.convert(wordid);
@@ -349,92 +345,75 @@ vector<unsigned> log_prob_parser(ComputationGraph* hg,
           log_probs.push_back(-cfsm->neg_log_softmax(nlp_t, wordid));
         }
         assert (wordid != 0);
-        cerr << termdict.convert(wordid) << endl;
-        stack_content.push_back(termdict.convert(wordid)); //add the string of the word to the stack
+        stack_content.push_back(termdict.convert(wordid)); //add the string of the word to the literal stack
         ++termc;
         Expression word = lookup(*hg, p_w, wordid);
-        terms.push_back(word);
+        terms.push_back(word); //add the embedding to the term LSTM
         term_lstm.add_input(word);
-        stack.push_back(word);
+        stack.push_back(word); //push the embedding to the back of the stack
         stack_lstm.add_input(word);
-        is_open_paren.push_back(-1);
-      } else if (ac == 'N') { // NT
+        //is_open_paren.push_back(-1);
+      } else if (ac == 'N') { // NT: add the non-terminal to the end of the stack
         ++nopen_parens;
-        auto it = action2NTindex.find(action);
+        auto it = action2NTindex.find(action); //find the index of the NT
         assert(it != action2NTindex.end());
         int nt_index = it->second;
         nt_count++;
-        stack_content.push_back(ntermdict.convert(nt_index));
+        nt_stack_content.push_back(ntermdict.convert(nt_index)); //put the string of the NT on the NT stack
         Expression nt_embedding = lookup(*hg, p_nt, nt_index);
-        stack.push_back(nt_embedding);
+        nt_stack.push_back(nt_embedding);
         stack_lstm.add_input(nt_embedding);
-        is_open_paren.push_back(nt_index);
+        is_open_paren.push_back(stack.size()-1); // add the index of the terminal that was just given structure
       } else { // REDUCE
         --nopen_parens;
-        assert(stack.size() > 2); // dummy symbol means > 2 (not >= 2)
-        assert(stack_content.size() > 2 && stack.size() == stack_content.size());
-        // find what paren we are closing
-        int i = is_open_paren.size() - 1; //get the last thing on the stack
-        while(is_open_paren[i] < 0) { --i; assert(i >= 0); } //iteratively decide whether or not it's a non-terminal
-        Expression nonterminal = lookup(*hg, p_ntup, is_open_paren[i]);
-        cerr << "is_open_paren.size(): " << is_open_paren.size() << endl;
-        cerr << "i: " << i << endl;
-        int nchildren = is_open_paren.size() - i;
-        cerr << "nchildren: " << nchildren << endl;
-        assert(nchildren > 0);
-        //cerr << "  number of children to reduce: " << nchildren << endl;
-        vector<Expression> children(nchildren);
+        cerr << "stack_content.size() " << stack_content.size() << " stack size " << stack.size() << endl;
+        assert(stack_content.size() + nt_stack.size() > 2 && stack.size() == stack_content.size() && nt_stack.size() == nt_stack_content.size());
+        // find what paren we are closing, map it to the terminal, and get the relevant terminals
+        Expression nonterminal = nt_stack.back();
+        int first_terminal_index = is_open_paren.back();
+        nt_stack.pop_back();
+        nt_stack_content.pop_back();
+        is_open_paren.pop_back();
+        int nchildren = stack.size() - first_terminal_index;
+        cerr << "stack size: " << stack.size() << " first_terminal_index: " << first_terminal_index << " nchildren to reduce:" << nchildren << endl;
+        assert (nchildren > 0);
+        vector <Expression> children(nchildren);
         const_lstm_fwd.start_new_sequence();
         const_lstm_rev.start_new_sequence();
 
         // REMOVE EVERYTHING FROM THE STACK THAT IS GOING
         // TO BE COMPOSED INTO A TREE EMBEDDING
         string curr_word;
-        //cerr << "--------------------------------" << endl;
-        //cerr << "Now printing the children" << endl;
-        //cerr << "--------------------------------" << endl;
-        for (i = 0; i < nchildren; ++i) {
-          assert (stack_content.size() == stack.size());
-          children[i] = stack.back();
-          stack.pop_back();
-          stack_lstm.rewind_one_step();
-          is_open_paren.pop_back();
-          curr_word = stack_content.back();
-          //cerr << "At the back of the stack (supposed to be one of the children): " << curr_word << endl;
-          stack_content.pop_back();
+        for (int i = 0; i < nchildren; ++i){
+            assert(stack_content.size() == stack.size());
+            children[i] = stack.back();
+            stack.pop_back();
+            stack_lstm.rewind_one_step();
+            curr_word = stack_content.back();
+            cerr << "currently composing " << curr_word << endl;
+            stack_content.pop_back();
         }
-        assert (stack_content.size() == stack.size());
-        //cerr << "Doing REDUCE operation" << endl;
-        is_open_paren.pop_back(); // nt symbol
-        stack.pop_back(); // nonterminal dummy
-        stack_lstm.rewind_one_step(); // nt symbol
-        curr_word = stack_content.back();
-        //cerr << "--------------------------------" << endl;
-        //cerr << "At the back of the stack (supposed to be the non-terminal symbol) : " << curr_word << endl;
-        stack_content.pop_back();
-        assert (stack.size() == stack_content.size());
-        //cerr << "Done reducing" << endl;
+        assert(stack_content.size() == stack.size());
 
-        // BUILD TREE EMBEDDING USING BIDIR LSTM
+        //BUILD TREE EMBEDDING USING BIDIR LSTM
         const_lstm_fwd.add_input(nonterminal);
         const_lstm_rev.add_input(nonterminal);
-        for (i = 0; i < nchildren; ++i) {
-          const_lstm_fwd.add_input(children[i]);
-          const_lstm_rev.add_input(children[nchildren - i - 1]);
+
+        for (int i = 0; i < nchildren; ++i){
+            const_lstm_fwd.add_input(children[i]);
+            const_lstm_rev.add_input(children[i]);
         }
         Expression cfwd = const_lstm_fwd.back();
         Expression crev = const_lstm_rev.back();
         if (apply_dropout) {
-          cfwd = dropout(cfwd, DROPOUT);
-          crev = dropout(crev, DROPOUT);
+            cfwd = dropout(cfwd, DROPOUT);
+            crev = dropout(crev, DROPOUT);
         }
         Expression c = concatenate({cfwd, crev});
         Expression composed = rectify(affine_transform({cbias, cW, c}));
         stack_lstm.add_input(composed);
         stack.push_back(composed);
         stack_content.push_back(curr_word);
-        //cerr << curr_word << endl;
-        is_open_paren.push_back(-1); // we just closed a paren at this position
       }
     }
     if (action_count != correct_actions.size()) {
@@ -1541,7 +1520,7 @@ int main(int argc, char** argv) {
     int iter = -1;
     double best_dev_llh = 9e99;
     //cerr << "TRAINING STARTED AT: " << put_time(localtime(&time_start), "%c %Z") << endl;
-    while(!requested_stop) {
+    while(!requested_stop && iter < 1) {
       ++iter;
       auto time_start = chrono::system_clock::now();
       for (unsigned sii = 0; sii < status_every_i_iterations; ++sii) {

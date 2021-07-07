@@ -262,11 +262,11 @@ vector<unsigned> log_prob_parser(ComputationGraph* hg,
       assert (stack.size() == stack_content.size());
       // get list of possible actions for the current parser state
       current_valid_actions.clear();
-      cerr << "current valid actions:\n";
+      //cerr << "current valid actions:\n";
       for (auto a: possible_actions) {
         if (IsActionForbidden_Generative(adict.convert(a), prev_a, terms.size(), stack.size(), nopen_parens))
           continue;
-        cerr << adict.convert(a) << endl;
+        //cerr << adict.convert(a) << endl;
         current_valid_actions.push_back(a);
       }
       //cerr << "valid actions = " << current_valid_actions.size() << endl;
@@ -315,7 +315,7 @@ vector<unsigned> log_prob_parser(ComputationGraph* hg,
           abort();
         }
         action = correct_actions[action_count];
-        cerr << "correct action: " << adict.convert(action) << "\n\n";
+        //cerr << "correct action: " << adict.convert(action) << "\n\n";
         //cerr << "prob ="; for (unsigned i = 0; i < adist.size(); ++i) { cerr << ' ' << adict.Convert(i) << ':' << adist[i]; }
         //cerr << endl;
         ++action_count;
@@ -366,7 +366,7 @@ vector<unsigned> log_prob_parser(ComputationGraph* hg,
         is_open_paren.push_back(stack.size()-1); // add the index of the terminal that was just given structure
       } else { // REDUCE
         --nopen_parens;
-        cerr << "stack_content.size() " << stack_content.size() << " stack size " << stack.size() << endl;
+        //cerr << "stack_content.size() " << stack_content.size() << " stack size " << stack.size() << endl;
         assert(stack_content.size() + nt_stack.size() > 2 && stack.size() == stack_content.size() && nt_stack.size() == nt_stack_content.size());
         // find what paren we are closing, map it to the terminal, and get the relevant terminals
         Expression nonterminal = nt_stack.back();
@@ -375,7 +375,7 @@ vector<unsigned> log_prob_parser(ComputationGraph* hg,
         nt_stack_content.pop_back();
         is_open_paren.pop_back();
         int nchildren = stack.size() - first_terminal_index;
-        cerr << "stack size: " << stack.size() << " first_terminal_index: " << first_terminal_index << " nchildren to reduce:" << nchildren << endl;
+        //cerr << "stack size: " << stack.size() << " first_terminal_index: " << first_terminal_index << " nchildren to reduce:" << nchildren << endl;
         assert (nchildren > 0);
         vector <Expression> children(nchildren);
         const_lstm_fwd.start_new_sequence();
@@ -390,7 +390,7 @@ vector<unsigned> log_prob_parser(ComputationGraph* hg,
             stack.pop_back();
             stack_lstm.rewind_one_step();
             curr_word = stack_content.back();
-            cerr << "currently composing " << curr_word << endl;
+            //cerr << "currently composing " << curr_word << endl;
             stack_content.pop_back();
         }
         assert(stack_content.size() == stack.size());
@@ -401,7 +401,7 @@ vector<unsigned> log_prob_parser(ComputationGraph* hg,
 
         for (int i = 0; i < nchildren; ++i){
             const_lstm_fwd.add_input(children[i]);
-            const_lstm_rev.add_input(children[i]);
+            const_lstm_rev.add_input(children[nchildren - i - 1]);
         }
         Expression cfwd = const_lstm_fwd.back();
         Expression crev = const_lstm_rev.back();
@@ -444,6 +444,8 @@ struct ParserState {
   unsigned nt_count;
   vector<Expression> stack;
   vector<string> stack_content;
+  vector<Expression> nt_stack;  //modifications used for the new parsing order
+  vector<string> nt_stack_content; //modifications used for the new parsing order
   vector<unsigned> results;  // sequence of predicted actions
   double score;
   int nopen_parens;
@@ -509,21 +511,20 @@ struct ParserStateAction {
       assert(it != action2NTindex.end());
       int nt_index = it->second;
       p_state->nt_count++;
-      p_state->stack_content.push_back(ntermdict.convert(nt_index));
+      p_state->nt_stack_content.push_back(ntermdict.convert(nt_index));
       Expression nt_embedding = lookup(*hg, p_nt, nt_index);
-      p_state->stack.push_back(nt_embedding);
+      p_state->nt_stack.push_back(nt_embedding);
       p_state->stack_lstm.add_input(nt_embedding);
-      p_state->is_open_paren.push_back(nt_index);
+      p_state->is_open_paren.push_back(p_state->stack.size()-1);
     } // do action: case REDUCE
     else if (a_char == 'R'){
       --p_state->nopen_parens;
-      assert(p_state->stack.size() > 2); // dummy symbol means > 2 (not >= 2)
-      assert(p_state->stack_content.size() > 2 && p_state->stack.size() == p_state->stack_content.size());
-      // find what paren we are closing
-      int i = p_state->is_open_paren.size() - 1; //get the last thing on the stack
-      while(p_state->is_open_paren[i] < 0) { --i; assert(i >= 0); } //iteratively decide whether or not it's a non-terminal
-      Expression nonterminal = lookup(*hg, p_ntup, p_state->is_open_paren[i]);
-      int nchildren = p_state->is_open_paren.size() - i - 1;
+      assert(p_state->stack_content.size() + p_state->nt_stack.size() > 2 && p_state->stack.size() == p_state->stack_content.size() && p_state->nt_stack.size() == p_state->nt_stack_content.size());
+      Expression nonterminal = p_state->nt_stack.back();
+      int first_terminal_index = p_state->is_open_paren.back();
+      p_state->nt_stack.pop_back();
+      p_state->nt_stack_content.pop_back();
+      int nchildren = p_state->stack.size() - first_terminal_index;
       assert(nchildren > 0);
       //cerr << "  number of children to reduce: " << nchildren << endl;
       vector<Expression> children(nchildren);
@@ -536,30 +537,20 @@ struct ParserStateAction {
       // cerr << "--------------------------------" << endl;
       // cerr << "Now printing the children" << endl;
       // cerr << "--------------------------------" << endl;
-      for (i = 0; i < nchildren; ++i) {
+      for (int i = 0; i < nchildren; ++i) {
         assert (p_state->stack_content.size() == p_state->stack.size());
         children[i] = p_state->stack.back();
         p_state->stack.pop_back();
         p_state->stack_lstm.rewind_one_step();
-        p_state->is_open_paren.pop_back();
         curr_word = p_state->stack_content.back();
         // cerr << "At the back of the stack (supposed to be one of the children): " << curr_word << endl;
         p_state->stack_content.pop_back();
       }
       assert (p_state->stack_content.size() == p_state->stack.size());
-      p_state->is_open_paren.pop_back(); // nt symbol
-      p_state->stack.pop_back(); // nonterminal dummy
-      p_state->stack_lstm.rewind_one_step(); // nt symbol
-      curr_word = p_state->stack_content.back();
-      //cerr << "--------------------------------" << endl;
-      //cerr << "At the back of the stack (supposed to be the non-terminal symbol) : " << curr_word << endl;
-      p_state->stack_content.pop_back();
-      assert (p_state->stack.size() == p_state->stack_content.size());
-      // cerr << "Done reducing" << endl;
       // BUILD TREE EMBEDDING USING BIDIR LSTM
       p_state->const_lstm_fwd.add_input(nonterminal);
       p_state->const_lstm_rev.add_input(nonterminal);
-      for (i = 0; i < nchildren; ++i) {
+      for ( int i = 0; i < nchildren; ++i) {
         p_state->const_lstm_fwd.add_input(children[i]);
         p_state->const_lstm_rev.add_input(children[nchildren - i - 1]);
       }
@@ -574,8 +565,8 @@ struct ParserStateAction {
       p_state->stack_lstm.add_input(composed);
       p_state->stack.push_back(composed);
       p_state->stack_content.push_back(curr_word);
-      p_state->is_open_paren.push_back(-1); // we just closed a paren at this position            
-    }else { // apply action: SHIFT
+    }
+    else { // apply action: SHIFT
       assert (wordid != 0);
       p_state->stack_content.push_back(termdict.convert(wordid)); //add the string of the word to the stack
       Expression word = lookup(*hg, p_w, wordid);
@@ -583,7 +574,6 @@ struct ParserStateAction {
       p_state->term_lstm.add_input(word);
       p_state->stack.push_back(word);
       p_state->stack_lstm.add_input(word);
-      p_state->is_open_paren.push_back(-1);        
     }
     return p_state;
   }
@@ -1579,7 +1569,8 @@ int main(int argc, char** argv) {
         Expression tot_neglogprob;
         parser.log_prob_parser(&cg, tot_neglogprob, parser::Sentence(), vector<int>(),&x,true);
       }
-      if (logc % 100 == 0) { // report on dev set
+      //if (logc % 100 == 0) { // report on dev set
+      if (true){
         unsigned dev_size = dev_corpus.size();
         double llh = 0;
         double trs = 0;
@@ -1588,7 +1579,7 @@ int main(int argc, char** argv) {
         auto t_start = chrono::high_resolution_clock::now();
         for (unsigned sii = 0; sii < dev_size; ++sii) {
            const auto& sentence=dev_corpus.sents[sii];
-	   const vector<int>& actions=dev_corpus.actions[sii];
+           const vector<int>& actions=dev_corpus.actions[sii];
            dwords += sentence.size();
            {  ComputationGraph hg;
               Expression tot_neglogprob;
@@ -1602,10 +1593,10 @@ int main(int argc, char** argv) {
         double err = (trs - right) / trs;
         //parser::EvalBResults res = parser::Evaluate("foo", pfx);
         cerr << "  **dev (iter=" << iter << " epoch=" << (tot_seen / corpus.size()) << ")\tllh=" << llh << " ppl: " << exp(llh / dwords) << " err: " << err << "\t[" << dev_size << " sents in " << chrono::duration<double, milli>(t_end-t_start).count() << " ms]" << endl;
-        if (llh < best_dev_llh && (tot_seen / corpus.size()) > 1.0) {
+        //if (llh < best_dev_llh && (tot_seen / corpus.size()) > 1.0 || true) {
+        if (true){
           cerr << "  new best...writing model to " << fname << " ...\n";
           best_dev_llh = llh;
-
           dynet::TextFileSaver out(fname);
           out.save(model);
 

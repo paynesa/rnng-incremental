@@ -40,7 +40,7 @@ overall_dict = {}
 for i in range(NUM_RUNS):
     # the temporary dict stores mappings from the condition to the list of surprisals for that file
     temp_dict = {}
-    file = pd.read_csv(f"particle_ptb_results/100-mvrr-{i + 1}.txt", sep="\t")
+    file = pd.read_csv(f"particle_bllip_results/100-mvrr-{i + 1}.txt", sep="\t")
     for j in range(len(META_DATA)):
         sentence = file[file["sentence_id"] == j + 1]
         counter = 0
@@ -83,7 +83,7 @@ for region_number in REGION_DATA:
 
 # plot the means and stderrs
 fig, ax = plt.subplots()
-plt.title("Particle Filter MVRR Results")
+plt.title("Bllip Particle Filter MVRR Results")
 for condition_name in means_for_stderr:
     current_means = [np.mean(np.asarray([means_for_stderr[condition_name][i] ])) for i in REGION_DATA]
     new_means = [([means_for_stderr[condition_name][region_number][i] - cross_condition_means[region_number][i] for i in range(len(cross_condition_means[region_number]))]) for region_number in REGION_DATA]
@@ -91,7 +91,9 @@ for condition_name in means_for_stderr:
     ax.errorbar(list(REGION_DATA.keys()), current_means,
                 yerr=current_stderrs, label=condition_name)
 plt.ylabel("mean surprisal")
-plt.xlabel("number of particles")
+plt.xlabel("position in sentence")
+ax.set_xticks(list(REGION_DATA.keys()))
+ax.set_xticklabels(list(REGION_DATA.values()))
 plt.legend()
 plt.show()
 

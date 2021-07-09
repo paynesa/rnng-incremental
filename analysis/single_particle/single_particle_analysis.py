@@ -28,7 +28,7 @@ AVERAGED_DICT = {}
 for i in range(10):
     sentence_number = 0
     OVERALL_DICT = {}
-    for line in open(f"ptb_particle/single-particle-{i+1}.txt"):
+    for line in open(f"bllip_particle/single-particle-{i+1}.txt"):
     #for line in open("single_particle.txt", "r"):
         if line.strip() and line.split()[0] != "Running":
             line = line.strip().split()
@@ -98,10 +98,10 @@ def my_pct(pct):
     return f"{pct :.1f}%" if pct > 3 else ""
 
 # plot the pie charts for each of the four cases
-for i in REGION_DATA:
+for i in [5]:
     print(i, REGION_DATA[i])
     fig, ax  = plt.subplots(2, 2)
-    fig.suptitle(f"Distribution of predicted NTs for {REGION_DATA[i]}")
+    fig.suptitle(f"Bllip Particle Filtering Distribution of predicted NTs for {REGION_DATA[i]}")
     where_to_plot = [ax[0,0], ax[0,1], ax[1,0], ax[1,1]]
     where = 0
     for key in sorted(OVERALL_DICT.keys()):

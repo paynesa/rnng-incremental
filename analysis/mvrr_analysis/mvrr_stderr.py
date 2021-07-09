@@ -86,10 +86,10 @@ for num_particle in PARTICLE_NUMBERS:
 
 # graph the results_bllip
 fig, ax = plt.subplots()
-plt.title(f"PTB Particle Filter Surprisals for MVRR at {REGION_DATA[REGION_NUMBER]}")
+plt.title(f"Bllip Beam Search Surprisals for MVRR at {REGION_DATA[REGION_NUMBER]}")
 for key in MEAN_DICT:
     ax.errorbar(PARTICLE_NUMBERS, MEAN_DICT[key], yerr=STDERR_DICT[key], label=key)
 plt.ylabel("mean surprisal")
-plt.xlabel("number of particles")
+plt.xlabel("beam size")
 plt.legend()
 plt.show()

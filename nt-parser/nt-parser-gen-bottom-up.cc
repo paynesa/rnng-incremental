@@ -171,12 +171,13 @@ static bool IsActionForbidden_Generative(const string& a, char prev_a, unsigned 
   assert(is_shift || is_reduce || is_nt);
   static const unsigned MAX_OPEN_NTS = 100;
   if (is_nt && nopen_parens > MAX_OPEN_NTS) return true;
+  // if only the dummy is on the stack, there is no terminal to reduce
   if (ssize == 1) {
     if (is_reduce) return true;
     return false;
   }
-  // you can't reduce after an NT action
-  if (is_reduce && prev_a == 'N') return true;
+  //only reduce if there is an NT to reduce
+  if (is_reduce && nopen_parens == 0) return true;
   return false;
 }
 
@@ -248,8 +249,7 @@ vector<unsigned> log_prob_parser(ComputationGraph* hg,
     // drive dummy symbol on stack through LSTM
     stack_lstm.add_input(stack.back());
     vector <Expression> nt_stack;
-    vector<int> is_open_paren; // -1 if no nonterminal has a parenthesis open, otherwise index of NT
-    is_open_paren.push_back(-1); // corresponds to dummy symbol
+    vector<int> is_open_paren; // stores the position of the first terminal for the given NT
     vector<Expression> log_probs;
     string rootword;
     unsigned action_count = 0;  // incremented at each prediction
@@ -519,7 +519,7 @@ struct ParserStateAction {
     } // do action: case REDUCE
     else if (a_char == 'R'){
       --p_state->nopen_parens;
-      cerr << "Reducing here. stack size: " << p_state->nt_stack.size() << " stack content size: " << p_state->nt_stack_content.size() << endl;
+      //cerr << "Reducing here. stack size: " << p_state->nt_stack.size() << " stack content size: " << p_state->nt_stack_content.size() << endl;
       assert(p_state->stack_content.size() + p_state->nt_stack.size() > 2 && p_state->stack.size() == p_state->stack_content.size() && p_state->nt_stack.size() == p_state->nt_stack_content.size());
       Expression nonterminal = p_state->nt_stack.back();
       int first_terminal_index = p_state->is_open_paren.back();
@@ -597,26 +597,24 @@ static void prune(vector<ParserStateAction*>& pq, unsigned k) {
 }
 
 
-/**Checks to see if a proposed action is valid in generative models using beam search or particle filtering*/
 bool canDoAction(const string& a, ParserState* p){
     bool is_shift = (a[0] == 'S' && a[1] == 'H');
     bool is_reduce = (a[0] == 'R' && a[1]=='E');
     bool is_nt = (a[0] == 'N');
     assert(is_shift || is_reduce || is_nt);
     if (is_reduce){
-        int i = p->is_open_paren.size() -1;
-        while(p->is_open_paren[i] < 0){--i;}
-        if (i < 0) return false;
+        if (p->stack.size() + p->nt_stack.size() < 2) return false;
+        //must have an open NT to reduce
+        if (p->stack.size() < 2) return false;
+        if (p->nt_stack.size() < 1) return false;
     }
     static const int MAX_OPEN_NTS = 100;
-    if (is_nt && p->nopen_parens >= MAX_OPEN_NTS) return false;
-    if (p->stack.size() == 1){
-        if (!is_nt) return false;
-        return true;
-    }
-    if (is_reduce && p->prev_a == 'N') return false;
+    if (is_nt && p->nt_stack.size() >= MAX_OPEN_NTS) return false;
     return true;
 }
+
+
+
 
 /**Probabilistic parsing using word-synchronous beam-search*/
 vector<double> log_prob_parser_beam(ComputationGraph* hg,
@@ -730,10 +728,11 @@ vector<double> log_prob_parser_beam(ComputationGraph* hg,
           //get all current valid actions at the parser state
           vector<unsigned> current_valid_actions;
           for (auto a: possible_actions) {
-              if (IsActionForbidden_Generative(adict.convert(a), prev_a, terms.size(), stack.size(), nopen_parens)){
-                  continue;
-              }
-              current_valid_actions.push_back(a);
+              if (canDoAction(adict.convert(a), p_this)) current_valid_actions.push_back(a);
+//              if (IsActionForbidden_Generative(adict.convert(a), prev_a, terms.size(), stack.size(), nopen_parens)){
+//                  continue;
+//              }
+//              current_valid_actions.push_back(a);
           }
           //get the corresponding stack, action, and term summaries, and apply dropout if needed
           Expression stack_summary = p_this->stack_lstm.back();
@@ -982,10 +981,11 @@ vector<double> log_prob_parser_particle(ComputationGraph* hg,
                     //get the valid actions for the particle
                     vector<unsigned> current_valid_actions;
                     for (auto a: possible_actions) {
-                        if (IsActionForbidden_Generative(adict.convert(a), particles[y]->prev_a, particles[y]->terms.size(), particles[y]->stack.size(), particles[y]->nopen_parens)){
-                            continue;
-                        }
-                        current_valid_actions.push_back(a);
+//                        if (IsActionForbidden_Generative(adict.convert(a), particles[y]->prev_a, particles[y]->terms.size(), particles[y]->stack.size(), particles[y]->nopen_parens)){
+//                            continue;
+//                        }
+//                        current_valid_actions.push_back(a);
+                        if (canDoAction(adict.convert(a), particles[y])) current_valid_actions.push_back(a);
                     }
                     //get the stack, action, and term summaries from the LSTMs, applying dropout if needed
                     Expression stack_summary = particles[y]->stack_lstm.back();
@@ -1517,7 +1517,7 @@ int main(int argc, char** argv) {
     int iter = -1;
     double best_dev_llh = 9e99;
     //cerr << "TRAINING STARTED AT: " << put_time(localtime(&time_start), "%c %Z") << endl;
-    while(!requested_stop && iter < 1) {
+    while(!requested_stop) {
       ++iter;
       auto time_start = chrono::system_clock::now();
       for (unsigned sii = 0; sii < status_every_i_iterations; ++sii) {
@@ -1576,8 +1576,7 @@ int main(int argc, char** argv) {
         Expression tot_neglogprob;
         parser.log_prob_parser(&cg, tot_neglogprob, parser::Sentence(), vector<int>(),&x,true);
       }
-      //if (logc % 100 == 0) { // report on dev set
-      if (true){
+      if (logc % 100 == 0) { // report on dev set
         unsigned dev_size = dev_corpus.size();
         double llh = 0;
         double trs = 0;
@@ -1600,8 +1599,7 @@ int main(int argc, char** argv) {
         double err = (trs - right) / trs;
         //parser::EvalBResults res = parser::Evaluate("foo", pfx);
         cerr << "  **dev (iter=" << iter << " epoch=" << (tot_seen / corpus.size()) << ")\tllh=" << llh << " ppl: " << exp(llh / dwords) << " err: " << err << "\t[" << dev_size << " sents in " << chrono::duration<double, milli>(t_end-t_start).count() << " ms]" << endl;
-        //if (llh < best_dev_llh && (tot_seen / corpus.size()) > 1.0 || true) {
-        if (true){
+        if (llh < best_dev_llh && (tot_seen / corpus.size()) > 1.0) {
           cerr << "  new best...writing model to " << fname << " ...\n";
           best_dev_llh = llh;
           dynet::TextFileSaver out(fname);

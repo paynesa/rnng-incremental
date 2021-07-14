@@ -95,6 +95,7 @@ void InitCommandLine(int argc, char** argv, po::variables_map* conf) {
         ("beam_size", po::value<unsigned>()->default_value(100), "beam size")
         ("np", po::value<unsigned>()->default_value(100), "number of particle filters for particle filtering")
         ("beam", po::value<bool>()->default_value(false), "true if running beam search")
+        ("mk", po::value<bool>()->default_value(false), "true if running modified particle filtering")
         ("fasttrack_beam_size", po::value<unsigned>()->default_value(5), "fast track beam size")
         ("word_beam_size", po::value<unsigned>()->default_value(10), "word beam size")
         ("lr", po::value<float>()->default_value(0.1), "Learning rate")  
@@ -1708,9 +1709,16 @@ int main(int argc, char** argv) {
             surprisals  = parser.log_prob_parser_beam(&hg, sentence, &right, BEAM_SIZE, FASTTRACK_BEAM_SIZE, WORD_BEAM_SIZE, false);
         }
         else {
-            cerr << "Running particle filtering with " << NUM_PARTICLES << " particles\n";
-            surprisals = parser.log_prob_parser_particle_2(&hg, sentence, &right, NUM_PARTICLES, 10, false);
-            //surprisals = parser.log_prob_parser_particle(&hg, sentence, &right, NUM_PARTICLES,  false);
+            bool modified = conf["mk"].as<bool>();
+            if (modified){
+                cerr << "Running modified particle filtering with k=" << NUM_PARTICLES << " and m=" << WORD_BEAM_SIZE << endl;
+                surprisals = parser.log_prob_parser_particle_2(&hg, sentence, &right, NUM_PARTICLES, WORD_BEAM_SIZE, false);
+
+            }
+            else {
+                cerr << "Running particle filtering with " << NUM_PARTICLES << " particles\n";
+                surprisals = parser.log_prob_parser_particle(&hg, sentence, &right, NUM_PARTICLES,  false);
+            }
         }
         //write out the surprisals
         for(unsigned k = 0; k < surprisals.size(); ++k){

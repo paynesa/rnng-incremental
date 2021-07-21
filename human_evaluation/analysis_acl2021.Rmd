@@ -441,14 +441,18 @@ ggsave("/home/paynesa/targeted-assessment-imaze/images/pred_acc_prediction.pdf",
 Plot the difference between grammatical and ungrammatical conditions, with predicted model slowdowns using the derived ms/bit effect term from above. 
 
 ```{r}
+BEAM_MS = 2.5
+REGULAR_PARTICLE_MS = 4.2
+PARTICLE_M_MS = 4.4
+
 effect_df = rbind(df_NPL_effect, df_RAN_effect, df_SVNA_effect, df_cleft_effect, df_MVRR_effect, df_FGD_effect)
 
 effect_df %>%
   mutate(model = factor(model, levels = c("beam", "regular_particle", "particle_m100", "human"))) %>%
   mutate(score = case_when(
-    model == "beam" ~ score * 12,
-    model == "regular_particle" ~ score * 19,
-    model == "particle_m100" ~ score * 8.8,
+    model == "beam" ~ score * BEAM_MS,
+    model == "regular_particle" ~ score * REGULAR_PARTICLE_MS,
+    model == "particle_m100" ~ score * PARTICLE_M_MS,
     model == "human" ~ score
   )) %>%
   group_by(suite, model) %>%
@@ -477,12 +481,13 @@ ggsave("/home/paynesa/targeted-assessment-imaze/images/effect.pdf", width = 8, h
 Statistics for paper
 
 ```{r}
+
 effect_stats_df = effect_df %>%
   mutate(model = factor(model, levels = c("beam", "regular_particle", "particle_m100", "human"))) %>%
   mutate(score = case_when(
-    model == "beam" ~ score * 12,
-    model == "regular_particle" ~ score * 19,
-    model == "particle_m100" ~ score * 8.8,
+    model == "beam" ~ score * BEAM_MS,
+    model == "regular_particle" ~ score * REGULAR_PARTICLE_MS,
+    model == "particle_m100" ~ score * PARTICLE_M_MS,
     model == "human" ~ score
   )) %>%
   group_by(suite, model) %>%
@@ -526,9 +531,9 @@ Pairwise regressions to determine which (if any) model is performing better than
 model_comp_df = effect_df %>%
   mutate(model = factor(model, levels = c("beam", "regular_particle", "particle_m100", "human"))) %>%
   mutate(score = case_when(
-    model == "beam" ~ score * 12,
-    model == "regular_particle" ~ score * 19,
-    model == "particle_m100" ~ score * 8.8,
+    model == "beam" ~ score * BEAM_MS,
+    model == "regular_particle" ~ score * REGULAR_PARTICLE_MS,
+    model == "particle_m100" ~ score * PARTICLE_M_MS,
     model == "human" ~ score
   )) %>%
   spread(model, score) %>%
@@ -569,9 +574,9 @@ get_overlap_scores = function(df, scalar) {
   df = df %>%
     mutate(model = factor(model, levels = c("beam", "regular_particle", "particle_m100", "human"))) %>%
     mutate(score = case_when(
-      model == "beam" ~ score * 12 * scalar,
-      model == "regular_particle" ~ score * 19 * scalar,
-      model == "particle_m100" ~ score * 8.8 * scalar,
+      model == "beam" ~ score * BEAM_MS * scalar,
+      model == "regular_particle" ~ score * REGULAR_PARTICLE_MS * scalar,
+      model == "particle_m100" ~ score * PARTICLE_M_MS * scalar,
       model == "human" ~ score
     )) %>%
     group_by(suite, model) %>%
@@ -676,7 +681,7 @@ resid_df %>%
       legend.position = "none",
       legend.title = element_blank()
     )
-ggsave("../images/residuals_hist.pdf", width = 4, height = 3, device = cairo_pdf())
+ggsave("residuals_hist.pdf", width = 4, height = 3, device = cairo_pdf())
 
 resid_df %>%
   mutate(resid = abs(resid)) %>%
@@ -699,7 +704,7 @@ resid_df %>%
     legend.title = element_blank(),
     legend.text = element_text(size = 8)
   )
-ggsave("../images/residuals_vals.pdf", width = 3, height = 3, device = cairo_pdf())
+ggsave("residuals_vals.pdf", width = 3, height = 3, device = cairo_pdf())
 
 
 ```
@@ -716,35 +721,19 @@ resid_pred_df = resid_critical_result_df %>%
   drop_na() 
 
 lm_model_comp = resid_pred_df %>%
-  filter(model == "rnng" | model == "jrnn") %>%
+  filter(model == "beam" | model == "regular_particle") %>%
   lmer(resid ~ model + (model|group:suite) + (model|condition), data = .)
 summary(lm_model_comp)
 
 lm_model_comp = resid_pred_df %>%
-  filter(model == "rnng" | model == "grnn") %>%
+  filter(model == "regular_particle" | model == "particle_m100") %>%
   lmer(resid ~ model + (model|group:suite) + (model|condition), data = .)
 summary(lm_model_comp)
   
 lm_model_comp = resid_pred_df %>%
-  filter(model == "rnng" | model == "gpt2") %>%
+  filter(model == "beam" | model == "particle_m100") %>%
   lmer(resid ~ model + (model||group:suite)+ (model||condition), data = .)
 summary(lm_model_comp)
-
-lm_model_comp = resid_pred_df %>%
-  filter(model == "gpt2" | model == "jrnn") %>%
-  lmer(resid ~ model + (model||group:suite) + (model||condition), data = .)
-summary(lm_model_comp)
-
-lm_model_comp = resid_pred_df %>%
-  filter(model == "gpt2" | model == "grnn") %>%
-  lmer(resid ~ model + (model||group:suite)+ (model||condition), data = .)
-summary(lm_model_comp)
-  
-lm_model_comp = resid_pred_df %>%
-  filter(model == "jrnn" | model == "grnn") %>%
-  lmer(resid ~ model + (model||group:suite) + (model||condition), data = .)
-summary(lm_model_comp)
-
 
 ```
 
@@ -796,7 +785,7 @@ resid_critical_plot_df %>%
     legend.position = "bottom",
     axis.title.x = element_blank()
   )
-ggsave("../images/big_residual_targets.pdf", height = 7, width = 12, device=cairo_pdf)
+ggsave("big_residual_targets.pdf", height = 7, width = 12, device=cairo_pdf)
 
 ```
 
@@ -810,7 +799,7 @@ resid_critical_plot_df %>%
               upper = m + s * 1.96,
               lower = m - s * 1.96) %>%
   ungroup() %>%
-  filter(model_t == "grnn") %>%
+  filter(model_t == "beam") %>%
   filter(str_detect(suite, "^FGD")) %>%
   ggplot(aes(x=suite, y=m, color = gram, fill=condition)) +
     theme_bw() +
@@ -832,7 +821,7 @@ resid_critical_plot_df %>%
     legend.position = "none",
     title = element_text(size = 9)
   )
-ggsave("../images/zoomed_residuals.pdf", height = 3, width = 3, device=cairo_pdf)
+ggsave("zoomed_residuals.pdf", height = 3, width = 3, device=cairo_pdf)
 
 
 ```

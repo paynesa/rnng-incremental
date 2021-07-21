@@ -20,9 +20,12 @@ def main():
         if line:
             SENTS.append(line)
     # the three types of decoding we're considering for each trained model
-    TYPES = ["beam", "particle_m100", "regular_particle"]
-    # the dataframe in which the averaged results will be stored
-    OVERALL_DF = None
+    TYPES = ["particle_m100", "regular_particle"]
+    # the dataframe in which the averaged results will be stored -- put beam initially
+    OVERALL_DF = pd.read_csv(f"{DIR}/beam.txt", sep="\t")
+    OVERALL_DF["sentence"] = [SENTS[i - 1] for i in list(OVERALL_DF["sentence_id"])]
+    OVERALL_DF = OVERALL_DF.rename(columns={"surprisal": "beam",
+                            "token_id": "word_number"})
     # iterate through each of the types
     for type in TYPES:
         print(f"\tProcessing {type}...")
@@ -35,12 +38,7 @@ def main():
             # rename the surprisal column to reflect the file we're considering
             df = df.rename(columns={"surprisal": f"{type}-{i + 1}",
                                     "token_id": "word_number"})
-            # if this is the first file we've considered, then it becomes the dataframe we're working with
-            if OVERALL_DF is None:
-                OVERALL_DF = df
-            # otherwise, merge the column of the file we're currently considering into the overall dataframe
-            else:
-                OVERALL_DF = pd.merge(OVERALL_DF, df, on=["sentence", "word_number",
+            OVERALL_DF = pd.merge(OVERALL_DF, df, on=["sentence", "word_number",
                                                     "sentence_id", "token"])
         # average the columns that have been added for this decoding pattern
         col = OVERALL_DF.loc[:, f"{type}-{1}":f"{type}-{10}"]
